@@ -702,6 +702,23 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public boolean testAnalyticsCloud() {
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			if (batchTestClassGroup.testAnalyticsCloud()) {
+				_testAnalyticsCloud = true;
+
+				return _testAnalyticsCloud;
+			}
+		}
+
+		_testAnalyticsCloud = false;
+
+		return _testAnalyticsCloud;
+	}
+
+	@Override
 	public boolean testHotfixChanges() {
 		JobProperty jobProperty = getJobProperty("test.hotfix.changes");
 
@@ -1201,7 +1218,7 @@ public abstract class BaseJob implements Job {
 		"unit-jdk8"
 	};
 
-	private static final Integer _THREAD_COUNT = 20;
+	private static final Integer _THREAD_COUNT = 10;
 
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(_THREAD_COUNT, true);
@@ -1216,5 +1233,6 @@ public abstract class BaseJob implements Job {
 	private final String _jobName;
 	private final List<JobProperty> _jobProperties = new ArrayList<>();
 	private Boolean _jUnitTestFileModifiedOnly;
+	private Boolean _testAnalyticsCloud;
 
 }

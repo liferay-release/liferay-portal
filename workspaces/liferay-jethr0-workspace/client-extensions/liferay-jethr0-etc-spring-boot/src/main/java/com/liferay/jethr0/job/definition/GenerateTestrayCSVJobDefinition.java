@@ -9,6 +9,7 @@ import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.definition.parameter.JenkinsBranchURLJobParameterDefinition;
 import com.liferay.jethr0.job.definition.parameter.JenkinsSlaveLabelJobParameterDefinition;
 import com.liferay.jethr0.job.definition.parameter.JobParameterDefinition;
+import com.liferay.jethr0.job.definition.parameter.PortalPullRequestURLJobParameterDefinition;
 import com.liferay.jethr0.job.definition.parameter.TestrayBuildIDJobParameterDefinition;
 
 import java.util.HashSet;
@@ -27,6 +28,8 @@ public class GenerateTestrayCSVJobDefinition extends BaseJobDefinition {
 			new JenkinsBranchURLJobParameterDefinition());
 		jobParameterDefinitions.add(
 			new JenkinsSlaveLabelJobParameterDefinition("!master"));
+		jobParameterDefinitions.add(
+			new PortalPullRequestURLJobParameterDefinition());
 		jobParameterDefinitions.add(new TestrayBuildIDJobParameterDefinition());
 
 		return jobParameterDefinitions;

@@ -50,7 +50,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 
 	const getFDSCardsSections = async () => {
 		const response = await fetch(
-			`${API_URL.FDS_CARDS_SECTIONS}?filter=(${OBJECT_RELATIONSHIP.FDS_VIEW_FDS_CARDS_SECTION_ID} eq '${fdsView.id}')`
+			`${API_URL.FDS_CARDS_SECTIONS}?filter=(${OBJECT_RELATIONSHIP.FDS_VIEW_FDS_CARDS_SECTION_ERC} eq '${fdsView.externalReferenceCode}')`
 		);
 
 		if (!response.ok) {
@@ -113,7 +113,8 @@ export default function Cards(props: IFDSViewSectionProps) {
 
 		const response = await fetch(url, {
 			body: JSON.stringify({
-				[OBJECT_RELATIONSHIP.FDS_VIEW_FDS_CARDS_SECTION_ID]: fdsView.id,
+				[OBJECT_RELATIONSHIP.FDS_VIEW_FDS_CARDS_SECTION_ERC]:
+					fdsView.externalReferenceCode,
 				fieldName: field.name,
 				name: cardsSection.name,
 			}),
@@ -134,7 +135,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 
 		const fdsCardsSection: IFDSCardsSection = await response.json();
 
-		openDefaultSuccessToast();
+		closeModal();
 
 		setCardsSections(
 			cardsSections.map((cardsSection) => {
@@ -153,7 +154,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 			})
 		);
 
-		closeModal();
+		openDefaultSuccessToast();
 	};
 
 	useEffect(() => {
@@ -163,7 +164,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 	}, []);
 
 	return (
-		<ClayLayout.ContentCol className="c-gap-4">
+		<ClayLayout.ContentCol className="c-gap-4 cards-visualization-mode">
 			<ClayAlert
 				displayType="info"
 				title={`${Liferay.Language.get('info')}:`}
@@ -178,16 +179,13 @@ export default function Cards(props: IFDSViewSectionProps) {
 				<ClayTable.Head>
 					<ClayTable.Row>
 						<ClayTable.Cell
-							className="cards-visualization-mode-label-cell"
+							className="cards-section-label"
 							headingCell
 						>
 							{Liferay.Language.get('card-element')}
 						</ClayTable.Cell>
 
-						<ClayTable.Cell
-							className="cards-visualization-mode-value-cell"
-							headingCell
-						>
+						<ClayTable.Cell className="field-name" headingCell>
 							{Liferay.Language.get('field')}
 						</ClayTable.Cell>
 					</ClayTable.Row>
@@ -261,11 +259,11 @@ function CardsSection({
 
 	return (
 		<ClayTable.Row>
-			<ClayTable.Cell className="cards-visualization-mode-label-cell">
+			<ClayTable.Cell className="cards-section-label">
 				<strong>{label}</strong>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell className="cards-visualization-mode-value-cell">
+			<ClayTable.Cell className="field-name">
 				<ClayInput.Group small>
 					<ClayInput.GroupItem>
 						<p

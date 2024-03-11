@@ -55,9 +55,19 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 		<clay:content-col
 			expand="<%= true %>"
 		>
+			<clay:alert
+				cssClass="c-mb-0 c-mt-2"
+				message="the-companys-xml-sitemap-only-includes-sites-without-virtual-hosts"
+			/>
+		</clay:content-col>
+	</clay:content-row>
+
+	<clay:content-row>
+		<clay:content-col
+			expand="<%= true %>"
+		>
 			<liferay-ui:search-container
 				compactEmptyResultsMessage="<%= true %>"
-				headerNames="null,site-name,null"
 				id="groupsSearchContainer"
 				searchContainer="<%= sitemapCompanyConfigurationDisplayContext.getSearchContainer() %>"
 			>
@@ -68,15 +78,26 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 					modelVar="group"
 					rowIdProperty="groupId"
 				>
-					<liferay-ui:search-container-column-icon
-						icon="sites"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:icon
+							symbol="sites"
+						/>
+					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
 						name="site-name"
 						truncate="<%= true %>"
-						value="<%= HtmlUtil.escape(group.getDescriptiveName()) %>"
-					/>
+					>
+						<%= HtmlUtil.escape(group.getDescriptiveName()) %>
+
+						<c:if test="<%= sitemapCompanyConfigurationDisplayContext.hasVirtualHost(group) %>">
+							<clay:icon
+								aria-label='<%= LanguageUtil.get(request, "this-site-is-not-included-in-the-companys-xml-sitemap-because-it-already-has-a-virtual-host") %>'
+								cssClass="text-warning"
+								symbol="warning-full"
+							/>
+						</c:if>
+					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>
 						<c:if test="<%= !group.isGuest() %>">

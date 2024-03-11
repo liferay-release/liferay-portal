@@ -7,7 +7,11 @@ import ClayButton from '@clayui/button';
 import {filesize} from 'filesize';
 
 import {DropzoneUpload} from '../../components/DropzoneUpload/DropzoneUpload';
-import {FileList, UploadedFile} from '../../components/FileList/FileList';
+import {
+	FileList,
+	UploadedFile,
+	UploadedImage,
+} from '../../components/FileList/FileList';
 import {Header} from '../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {Section} from '../../components/Section/Section';
@@ -22,6 +26,7 @@ import {useState} from 'react';
 import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
 import fetcher from '../../services/fetcher';
+import HeadlessCommerceAdminCatalogImpl from '../../services/rest/HeadlessCommerceAdminCatalog';
 import {submitBase64EncodedFile} from '../../utils/util';
 
 const ACCEPT_FILE_TYPES = {
@@ -57,6 +62,7 @@ export function CustomizeAppStorefrontPage({
 			MAX_IMAGE_QUANTITY
 		) {
 			const newUploadedFiles: UploadedFile[] = files.map((file) => ({
+				changed: false,
 				error: false,
 				file,
 				fileName: file.name,
@@ -89,7 +95,7 @@ export function CustomizeAppStorefrontPage({
 		);
 
 		if (appStorefrontImages[currentFiles]?.uploaded) {
-			await fetcher(
+			await fetcher.delete(
 				`${baseURL}/o/headless-commerce-admin-catalog/v1.0/attachment/${id}`
 			);
 		}
@@ -115,11 +121,12 @@ export function CustomizeAppStorefrontPage({
 	};
 
 	const handleArrowClick = (index: number, direction: string) => {
-		const files = swapImageElements(
-			appStorefrontImages,
-			index,
-			direction === 'up' ? index - 1 : index + 1
-		);
+		const newIndex = direction === 'up' ? index - 1 : index + 1;
+
+		const files = swapImageElements(appStorefrontImages, index, newIndex);
+
+		files[index].changed = true;
+		files[newIndex].changed = true;
 
 		dispatch({
 			payload: {
@@ -229,43 +236,68 @@ export function CustomizeAppStorefrontPage({
 						index,
 						image,
 					] of appStorefrontImages.entries()) {
-						if (image.uploaded) {
-							// eslint-disable-next-line no-console
-							console.info('File already uploaded', image);
+						if (image.uploaded && image.changed) {
+							const {uploadedImage} = (appStorefrontImages[
+								index
+							] as unknown) as UploadedImage;
 
-							continue;
+							uploadedImage.priority = index + 1;
+
+							uploadedImage.title.en_US = image.imageDescription as string;
+
+							await HeadlessCommerceAdminCatalogImpl.addOrUpdateProductImageByExternalReferenceCode(
+								appERC,
+								(uploadedImage as unknown) as UploadedImage
+							);
+
+							appStorefrontImages[index].changed = false;
+
+							dispatch({
+								payload: {
+									files: appStorefrontImages,
+								},
+								type: TYPES.UPLOAD_APP_STOREFRONT_IMAGES,
+							});
 						}
 
-						const id = await submitBase64EncodedFile({
-							appERC,
-							callback: (progress) => {
-								appStorefrontImages[index].progress = progress;
-								appStorefrontImages[index].uploaded =
-									progress === 100;
+						if (!image.uploaded) {
+							const uploadedFile = await submitBase64EncodedFile({
+								appERC,
+								callback: (progress) => {
+									appStorefrontImages[
+										index
+									].progress = progress;
+									appStorefrontImages[index].uploaded =
+										progress === 100;
 
-								dispatch({
-									payload: {
-										files: appStorefrontImages,
-									},
-									type: TYPES.UPLOAD_APP_STOREFRONT_IMAGES,
-								});
-								appStorefrontImages;
-							},
-							file: image.file,
-							index: index + 1,
-							isAppIcon: false,
-							requestFunction: createImageAxios,
-							title: image.fileName,
-						});
+									dispatch({
+										payload: {
+											files: appStorefrontImages,
+										},
+										type:
+											TYPES.UPLOAD_APP_STOREFRONT_IMAGES,
+									});
+									appStorefrontImages;
+								},
+								file: image.file,
+								index: index + 1,
+								isAppIcon: false,
+								requestFunction: createImageAxios,
+								title: image.imageDescription ?? image.fileName,
+							});
 
-						appStorefrontImages[index].id = id as string;
+							appStorefrontImages[
+								index
+							].uploadedImage = uploadedFile as UploadedImage;
+							appStorefrontImages[index].changed = false;
 
-						dispatch({
-							payload: {
-								files: appStorefrontImages,
-							},
-							type: TYPES.UPLOAD_APP_STOREFRONT_IMAGES,
-						});
+							dispatch({
+								payload: {
+									files: appStorefrontImages,
+								},
+								type: TYPES.UPLOAD_APP_STOREFRONT_IMAGES,
+							});
+						}
 					}
 
 					onClickContinue();

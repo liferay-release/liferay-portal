@@ -15,8 +15,10 @@ import com.liferay.jethr0.util.StringUtil;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -33,7 +35,8 @@ public class OpenGitHubPullRequestEventHandler
 	@Override
 	public String process() throws InvalidJSONException, IOException {
 		if (checkLiferayGitHubUser() ||
-			closeInvalidUpstreamGitHubBranchName()) {
+			closeInvalidUpstreamGitHubBranchName() ||
+			_skipCISenderBlacklistGitHubUser()) {
 
 			return null;
 		}
@@ -43,6 +46,8 @@ public class OpenGitHubPullRequestEventHandler
 
 		if (_checkForwardedPullRequest() ||
 			_checkMergeSubrepositoryPullRequest()) {
+
+			_commentDefaultMessage();
 
 			return null;
 		}
@@ -191,6 +196,41 @@ public class OpenGitHubPullRequestEventHandler
 		gitHubPullRequest.comment(broadcastMessage);
 	}
 
+	private void _commentDefaultMessage() throws InvalidJSONException {
+		GitHubPullRequest gitHubPullRequest = getGitHubPullRequest();
+
+		GitHubUser senderGitHubUser = gitHubPullRequest.getSenderGitHubUser();
+
+		if (!senderGitHubUser.isLiferayUser()) {
+			return;
+		}
+
+		GitHubUser receiverGitHubUser =
+			gitHubPullRequest.getReceiverGitHubUser();
+
+		String receiverGitHubUserName = receiverGitHubUser.getName();
+
+		String baseRepositoryName = gitHubPullRequest.getBaseRepositoryName();
+
+		if (receiverGitHubUserName.equals("liferay") &&
+			!baseRepositoryName.startsWith("com-liferay") &&
+			!baseRepositoryName.equals("liferay-portal-ee")) {
+
+			return;
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("To conserve resources, the PR Tester does not ");
+		sb.append("automatically run for every pull.\n\nIf your code changes ");
+		sb.append("were already tested in another pull, reference that pull ");
+		sb.append("in this pull so the test results can be analyzed.\n\nIf ");
+		sb.append("your pull was never tested, comment &quot;ci:test&quot; ");
+		sb.append("to run the PR Tester for this pull.");
+
+		gitHubPullRequest.comment(sb.toString());
+	}
+
 	private Set<JobEntity> _createJobEntities()
 		throws InvalidJSONException, IOException {
 
@@ -256,6 +296,44 @@ public class OpenGitHubPullRequestEventHandler
 		for (JobEntity jobEntity : jobEntities) {
 			invokeJobEntity(jobEntity);
 		}
+	}
+
+	private boolean _skipCISenderBlacklistGitHubUser()
+		throws InvalidJSONException, IOException {
+
+		GitHubPullRequest gitHubPullRequest = getGitHubPullRequest();
+
+		if (gitHubPullRequest == null) {
+			return false;
+		}
+
+		List<String> ciTestAutoSendersBlacklist = new ArrayList<>();
+
+		String ciTestAutoSendersBlacklistString =
+			getSenderBranchCIPropertyValue("ci.test.auto.senders.blacklist");
+
+		if (!StringUtil.isNullOrEmpty(ciTestAutoSendersBlacklistString)) {
+			Collections.addAll(
+				ciTestAutoSendersBlacklist,
+				ciTestAutoSendersBlacklistString.split(","));
+		}
+
+		ciTestAutoSendersBlacklistString = getUpstreamBranchCIPropertyValue(
+			"ci.test.auto.senders.blacklist");
+
+		if (!StringUtil.isNullOrEmpty(ciTestAutoSendersBlacklistString)) {
+			Collections.addAll(
+				ciTestAutoSendersBlacklist,
+				ciTestAutoSendersBlacklistString.split(","));
+		}
+
+		GitHubUser senderGitHubUser = gitHubPullRequest.getSenderGitHubUser();
+
+		if (!ciTestAutoSendersBlacklist.contains(senderGitHubUser.getName())) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private static final Pattern _branchSHAPattern = Pattern.compile(

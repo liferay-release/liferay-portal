@@ -131,8 +131,7 @@ const ActivityClaimPanel = ({
 	return (
 		<>
 			<ClayPanel
-				className="bg-neutral-1 border-brand-primary-lighten-2 mb-4 text-neutral-7"
-				displayType="secondary"
+				className="border-brand-primary-lighten-4"
 				expanded={activity.selected && expanded}
 			>
 				<PanelHeader
@@ -216,6 +215,15 @@ const ActivityClaimPanel = ({
 							</h5>
 						</div>
 					</div>
+
+					{!expanded && activity.selected && (
+						<span className="collapse-icon-closed mt-2">
+							<ClayIcon symbol="angle-down" />
+						</span>
+					)}
+					<span className="collapse-icon-open mt-2">
+						<ClayIcon symbol="angle-up" />
+					</span>
 				</PanelHeader>
 
 				<PanelBody expanded={activity.selected && expanded}>

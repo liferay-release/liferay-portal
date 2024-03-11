@@ -101,9 +101,11 @@ definition {
 		}
 
 		task ("Go to the Home Page") {
-			Navigator.openURL();
-
-			ACUtils.waitForSendingRequest();
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "View Page,View Page",
+				pageName = "Home",
+				siteName = "guest");
 		}
 
 		task ("Close sessions") {
@@ -112,6 +114,14 @@ definition {
 
 		task ("Go to AC") {
 			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
 		}
 
 		task ("Create Access Request") {
@@ -169,9 +179,11 @@ definition {
 		}
 
 		task ("Go to the Home Page") {
-			Navigator.openURL();
-
-			ACUtils.waitForSendingRequest();
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "View Page,View Page",
+				pageName = "Home",
+				siteName = "guest");
 		}
 
 		task ("Close sessions") {
@@ -180,6 +192,14 @@ definition {
 
 		task ("Go to AC") {
 			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
 		}
 
 		task ("Create Delete Request") {
@@ -206,33 +226,58 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-8109 | Test Summary: Create Suppress Request"
-	@ignore = "true"
 	@priority = 5
 	test CanCreateSuppressRequest {
-
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
-
 		property test.run.type = "single";
 
 		var userEmail = "dcp3@liferay.com";
 		var userName = "dcp3";
 
-		JSONUser.addUser(
-			userEmailAddress = ${userEmail},
-			userFirstName = ${userName},
-			userLastName = ${userName},
-			userScreenName = ${userName});
+		task ("Add a new user") {
+			JSONUser.addUser(
+				userEmailAddress = ${userEmail},
+				userFirstName = ${userName},
+				userLastName = ${userName},
+				userScreenName = ${userName});
 
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = ${userEmail});
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = ${userEmail});
+		}
 
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
+		task ("Connect the DXP to AC") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud();
+		}
 
-		ACUtils.launchAC();
+		task ("Sign in as new user") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = ${userEmail},
+				userLoginFullName = ${userName});
+		}
 
-		task ("Go to settings and create a suppress request") {
+		task ("Go to Site Page") {
+			ACUtils.navigateToSitePage(
+				documentTitleList = "View WC,View WC",
+				pageName = "Home",
+				siteName = "guest");
+		}
+
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Go to AC > Settings > Create a suppress request") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
+
 			ACNavigation.goToSettings();
 
 			ACSettings.createRequestLogByEmail(
@@ -260,9 +305,7 @@ definition {
 	@priority = 3
 	test CanUnsuppressUser {
 
-		// AC Refactor: Timing issues may happen on this test case
-		// AC Refactor ticket: LRAC-9439
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
+		// AC Disabled: Timing issues may happen on this test case. The Suppress and Unsuppress requests takes 90 minutes to execute
 
 		var userEmail = "dcp4@liferay.com";
 		var userName = "dcp4";
@@ -312,7 +355,7 @@ definition {
 
 		task ("Assert that the user was unsuppressed") {
 			ACSettings.createRequestLogByEmail(
-				emailAdresses = ${userEmail},
+				email = ${userEmail},
 				jobType = "Access");
 
 			ACSettings.goToDataControlAndPrivacy();
@@ -336,9 +379,7 @@ definition {
 	@priority = 5
 	test SuppressedUserAppearsInSuppressedUserList {
 
-		// AC Refactor: Timing issues may happen on this test case
-		// AC Refactor ticket: LRAC-9438
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
+		// AC Disabled: Timing issues may happen on this test case. The Suppress request takes 90 minutes to execute
 
 		var userEmail = "dcp5@liferay.com";
 		var userName = "dcp5";
@@ -362,7 +403,7 @@ definition {
 			ACNavigation.goToSettings();
 
 			ACSettings.createRequestLogByEmail(
-				emailAdresses = ${userEmail},
+				email = ${userEmail},
 				jobType = "Suppress");
 		}
 

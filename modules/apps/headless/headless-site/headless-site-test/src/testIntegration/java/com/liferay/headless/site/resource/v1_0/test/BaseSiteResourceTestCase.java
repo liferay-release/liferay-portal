@@ -208,13 +208,43 @@ public abstract class BaseSiteResourceTestCase {
 	public void testPostSite() throws Exception {
 		Site randomSite = randomSite();
 
-		Site postSite = testPostSite_addSite(randomSite);
+		Map<String, File> multipartFiles = getMultipartFiles();
+
+		Site postSite = testPostSite_addSite(randomSite, multipartFiles);
 
 		assertEquals(randomSite, postSite);
 		assertValid(postSite);
+
+		assertValid(postSite, multipartFiles);
 	}
 
-	protected Site testPostSite_addSite(Site site) throws Exception {
+	protected Site testPostSite_addSite(
+			Site site, Map<String, File> multipartFiles)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostFormDataSite() throws Exception {
+		Site randomSite = randomSite();
+
+		Map<String, File> multipartFiles = getMultipartFiles();
+
+		Site postSite = testPostFormDataSite_addSite(
+			randomSite, multipartFiles);
+
+		assertEquals(randomSite, postSite);
+		assertValid(postSite);
+
+		assertValid(postSite, multipartFiles);
+	}
+
+	protected Site testPostFormDataSite_addSite(
+			Site site, Map<String, File> multipartFiles)
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
@@ -228,9 +258,37 @@ public abstract class BaseSiteResourceTestCase {
 			204,
 			siteResource.deleteSiteByExternalReferenceCodeHttpResponse(
 				site.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			siteResource.getSiteByExternalReferenceCodeHttpResponse(
+				site.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			siteResource.getSiteByExternalReferenceCodeHttpResponse(
+				site.getExternalReferenceCode()));
 	}
 
 	protected Site testDeleteSiteByExternalReferenceCode_addSite()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSiteByExternalReferenceCode() throws Exception {
+		Site postSite = testGetSiteByExternalReferenceCode_addSite();
+
+		Site getSite = siteResource.getSiteByExternalReferenceCode(
+			postSite.getExternalReferenceCode());
+
+		assertEquals(postSite, getSite);
+		assertValid(getSite);
+	}
+
+	protected Site testGetSiteByExternalReferenceCode_addSite()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -251,7 +309,7 @@ public abstract class BaseSiteResourceTestCase {
 		assertEquals(randomSite, putSite);
 		assertValid(putSite);
 
-		Site getSite = testPutSiteByExternalReferenceCode_getSite(
+		Site getSite = siteResource.getSiteByExternalReferenceCode(
 			putSite.getExternalReferenceCode());
 
 		assertEquals(randomSite, getSite);
@@ -267,7 +325,7 @@ public abstract class BaseSiteResourceTestCase {
 		assertEquals(newSite, putSite);
 		assertValid(putSite);
 
-		getSite = testPutSiteByExternalReferenceCode_getSite(
+		getSite = siteResource.getSiteByExternalReferenceCode(
 			putSite.getExternalReferenceCode());
 
 		assertEquals(newSite, getSite);
@@ -275,13 +333,6 @@ public abstract class BaseSiteResourceTestCase {
 		Assert.assertEquals(
 			newSite.getExternalReferenceCode(),
 			putSite.getExternalReferenceCode());
-	}
-
-	protected Site testPutSiteByExternalReferenceCode_getSite(
-		String externalReferenceCode) {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	protected Site testPutSiteByExternalReferenceCode_createSite()
@@ -295,6 +346,13 @@ public abstract class BaseSiteResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSiteByExternalReferenceCodeSiteInitializer()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	protected Site testGraphQLSite_addSite() throws Exception {

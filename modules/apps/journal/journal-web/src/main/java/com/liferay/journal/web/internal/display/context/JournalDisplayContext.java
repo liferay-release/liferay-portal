@@ -76,6 +76,9 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
@@ -105,6 +108,8 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -139,6 +144,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -149,23 +156,25 @@ import javax.servlet.http.HttpServletRequest;
 public class JournalDisplayContext {
 
 	public static JournalDisplayContext create(
-		HttpServletRequest httpServletRequest,
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
 		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
-		TrashHelper trashHelper) {
+		ItemSelector itemSelector, JournalHelper journalHelper,
+		JournalWebConfiguration journalWebConfiguration,
+		PortletRequest portletRequest, PortletResponse portletResponse,
+		ResourcePermissionLocalService resourcePermissionLocalService,
+		RoleLocalService roleLocalService, TrashHelper trashHelper) {
 
 		JournalDisplayContext journalDisplayContext =
-			(JournalDisplayContext)liferayPortletRequest.getAttribute(
+			(JournalDisplayContext)portletRequest.getAttribute(
 				JournalWebConstants.JOURNAL_DISPLAY_CONTEXT);
 
 		if (journalDisplayContext == null) {
 			journalDisplayContext = new JournalDisplayContext(
-				httpServletRequest, liferayPortletRequest,
-				liferayPortletResponse, assetDisplayPageFriendlyURLProvider,
-				trashHelper);
+				assetDisplayPageFriendlyURLProvider, itemSelector,
+				journalHelper, journalWebConfiguration, portletRequest,
+				portletResponse, resourcePermissionLocalService,
+				roleLocalService, trashHelper);
 
-			liferayPortletRequest.setAttribute(
+			portletRequest.setAttribute(
 				JournalWebConstants.JOURNAL_DISPLAY_CONTEXT,
 				journalDisplayContext);
 		}
@@ -1293,6 +1302,21 @@ public class JournalDisplayContext {
 		return false;
 	}
 
+	public boolean hasGuestViewPermission(JournalArticle journalArticle)
+		throws PortalException {
+
+		if (_guestRole == null) {
+			_guestRole = _roleLocalService.getRole(
+				journalArticle.getCompanyId(), RoleConstants.GUEST);
+		}
+
+		return _resourcePermissionLocalService.hasResourcePermission(
+			journalArticle.getCompanyId(), JournalArticle.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(journalArticle.getResourcePrimKey()),
+			_guestRole.getRoleId(), ActionKeys.VIEW);
+	}
+
 	public boolean hasResults() throws PortalException {
 		if (getTotalItems() > 0) {
 			return true;
@@ -1513,30 +1537,31 @@ public class JournalDisplayContext {
 	}
 
 	private JournalDisplayContext(
-		HttpServletRequest httpServletRequest,
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
 		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
-		TrashHelper trashHelper) {
+		ItemSelector itemSelector, JournalHelper journalHelper,
+		JournalWebConfiguration journalWebConfiguration,
+		PortletRequest portletRequest, PortletResponse portletResponse,
+		ResourcePermissionLocalService resourcePermissionLocalService,
+		RoleLocalService roleLocalService, TrashHelper trashHelper) {
 
-		_httpServletRequest = httpServletRequest;
-		_liferayPortletRequest = liferayPortletRequest;
-		_liferayPortletResponse = liferayPortletResponse;
 		_assetDisplayPageFriendlyURLProvider =
 			assetDisplayPageFriendlyURLProvider;
+		_itemSelector = itemSelector;
+		_journalHelper = journalHelper;
+		_journalWebConfiguration = journalWebConfiguration;
+		_resourcePermissionLocalService = resourcePermissionLocalService;
+		_roleLocalService = roleLocalService;
 		_trashHelper = trashHelper;
 
-		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
-			ItemSelector.class.getName());
-		_journalHelper = (JournalHelper)httpServletRequest.getAttribute(
-			JournalHelper.class.getName());
-		_journalWebConfiguration =
-			(JournalWebConfiguration)httpServletRequest.getAttribute(
-				JournalWebConfiguration.class.getName());
+		_httpServletRequest = PortalUtil.getHttpServletRequest(portletRequest);
+		_liferayPortletRequest = PortalUtil.getLiferayPortletRequest(
+			portletRequest);
+		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
+			portletResponse);
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			httpServletRequest);
+			_httpServletRequest);
 
-		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
@@ -2331,9 +2356,7 @@ public class JournalDisplayContext {
 		long ddmStructureId = ParamUtil.getLong(
 			_httpServletRequest, "ddmStructureId");
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-194763") &&
-			isHighlightedDDMStructure()) {
-
+		if (isHighlightedDDMStructure()) {
 			searchContext.setClassTypeIds(
 				new long[] {getHighlightedDDMStructureId()});
 		}
@@ -2402,6 +2425,7 @@ public class JournalDisplayContext {
 	private String _displayStyle;
 	private JournalFolder _folder;
 	private Long _folderId;
+	private Role _guestRole;
 	private Long _highlightedDDMStructureId;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
@@ -2418,7 +2442,10 @@ public class JournalDisplayContext {
 	private String _orderByType;
 	private Long _parentFolderId;
 	private final PortalPreferences _portalPreferences;
+	private final ResourcePermissionLocalService
+		_resourcePermissionLocalService;
 	private Integer _restrictionType;
+	private final RoleLocalService _roleLocalService;
 	private SearchContainer<?> _searchContainer;
 	private String _searchIn;
 	private String _searchLocation;

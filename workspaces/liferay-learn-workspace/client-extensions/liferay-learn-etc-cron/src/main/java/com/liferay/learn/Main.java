@@ -145,7 +145,8 @@ public class Main {
 			liferayUrl = "http://localhost:8080";
 		}
 
-		String baseDir = System.getenv("LIFERAY_LEARN_ETC_CRON_ROOT_DIR");
+		String baseDir = System.getenv(
+			"LIFERAY_LEARN_ETC_CRON_GIT_REPOSITORY_DIR");
 
 		if (baseDir == null) {
 			baseDir = "~/liferay-learn";
@@ -177,8 +178,14 @@ public class Main {
 	public static void sendSlackMessage(String exceptionMessage)
 		throws Exception {
 
-		HttpPost httpPost = new HttpPost(
-			System.getenv("LIFERAY_LEARN_ETC_CRON_SLACK_ENDPOINT"));
+		String slackEndpoint = System.getenv(
+			"LIFERAY_LEARN_ETC_CRON_SLACK_ENDPOINT");
+
+		if (slackEndpoint == null) {
+			return;
+		}
+
+		HttpPost httpPost = new HttpPost(slackEndpoint);
 
 		String slackMessage = StringBundler.concat(
 			new Date(), " *", System.getenv("LCP_PROJECT_ID"), "*->*",
@@ -460,8 +467,6 @@ public class Main {
 			catch (Exception exception) {
 				_error(fileName + ": " + exception.getMessage());
 			}
-
-			_saveHashToFile(new File(_baseDirName), _newHash);
 		}
 
 		existingStructuredContentIds.removeAll(importedStructuredContentIds);
@@ -484,6 +489,8 @@ public class Main {
 						exception.getMessage());
 			}
 		}
+
+		_saveHashToFile(new File(_baseDirName), _newHash);
 
 		System.out.println(
 			addedStructuredContentCount + " structured contents were added.");
@@ -1413,6 +1420,7 @@ public class Main {
 							_landingPageFiles.contains(englishFile)));
 				}
 			};
+
 		ContentFieldValue englishNavigationLinksContentFieldValue =
 			new ContentFieldValue() {
 				{

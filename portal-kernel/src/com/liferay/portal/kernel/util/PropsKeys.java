@@ -77,6 +77,12 @@ public interface PropsKeys {
 	public static final String ADMIN_EMAIL_USER_ADDED_SUBJECT =
 		"admin.email.user.added.subject";
 
+	public static final String ADMIN_EMAIL_USER_CREATION_ATTEMPT_BODY =
+		"admin.email.user.creation.attempt.body";
+
+	public static final String ADMIN_EMAIL_USER_CREATION_ATTEMPT_SUBJECT =
+		"admin.email.user.creation.attempt.subject";
+
 	public static final String ADMIN_EMAIL_VERIFICATION_BODY =
 		"admin.email.verification.body";
 
@@ -1399,15 +1405,6 @@ public interface PropsKeys {
 
 	public static final String LDAP_ATTRS_TRANSFORMER_IMPL =
 		"ldap.attrs.transformer.impl";
-
-	public static final String LEARN_RESOURCES_CDN_ENABLED =
-		"learn.resources.cdn.enabled";
-
-	public static final String LEARN_RESOURCES_ENABLED =
-		"learn.resources.enabled";
-
-	public static final String LEARN_RESOURCES_REFRESH_TIME =
-		"learn.resources.refresh.time";
 
 	public static final String LIFERAY_HOME = "liferay.home";
 

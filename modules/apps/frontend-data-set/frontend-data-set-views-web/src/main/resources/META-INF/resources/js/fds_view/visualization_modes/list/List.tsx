@@ -9,10 +9,13 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
-import {fetch, openModal} from 'frontend-js-web';
+import {fetch, openModal, sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import '../../../../css/ListVisualizationMode.scss';
+
+import {ClayDropDownWithItems} from '@clayui/drop-down';
+
 import {IFDSViewSectionProps} from '../../../FDSView';
 import FieldSelectModalContent from '../../../components/FieldSelectModalContent';
 import {API_URL, OBJECT_RELATIONSHIP} from '../../../utils/constants';
@@ -86,6 +89,38 @@ export default function List(props: IFDSViewSectionProps) {
 						name: fdsListSection.fieldName,
 					},
 				};
+			})
+		);
+	};
+
+	const clearFDSListSection = async (listSection: IListSection) => {
+		setSaveButtonDisabled(true);
+
+		const response = await fetch(
+			`${API_URL.FDS_LIST_SECTIONS}/by-external-reference-code/${listSection.externalReferenceCode}`,
+			{method: 'DELETE'}
+		);
+
+		setSaveButtonDisabled(false);
+
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
+
+		setListSections(
+			listSections.map((section) => {
+				if (section.name !== listSection.name) {
+					return section;
+				}
+
+				const nextListSection = {...listSection};
+
+				delete nextListSection.externalReferenceCode;
+				delete nextListSection.field;
+
+				return nextListSection;
 			})
 		);
 	};
@@ -194,6 +229,9 @@ export default function List(props: IFDSViewSectionProps) {
 							key={listSection.name}
 							listSection={listSection}
 							modalProps={props}
+							onClearSelection={() => {
+								clearFDSListSection(listSection);
+							}}
 							onSelect={({closeModal, selectedField}) => {
 								saveFDSListSection({
 									closeModal,
@@ -213,6 +251,7 @@ export default function List(props: IFDSViewSectionProps) {
 interface IListSectionProps {
 	listSection: IListSection;
 	modalProps: IFDSViewSectionProps;
+	onClearSelection: () => void;
 	onSelect: ({
 		closeModal,
 		selectedField,
@@ -226,14 +265,14 @@ interface IListSectionProps {
 function ListSection({
 	listSection,
 	modalProps,
+	onClearSelection,
 	onSelect,
 	saveButtonDisabled,
 }: IListSectionProps) {
 	const {field, label} = listSection;
 
-	const onClick = () => {
+	const openSelectFieldModal = () => {
 		openModal({
-			className: 'list-visualization-mode-field-select-modal',
 			contentComponent: ({closeModal}: {closeModal: Function}) => (
 				<FieldSelectModalContent
 					{...modalProps}
@@ -270,22 +309,73 @@ function ListSection({
 								{'text-secondary': !field}
 							)}
 						>
-							{field?.name ||
-								Liferay.Language.get('not-assigned')}
+							{field
+								? field.label || field.name
+								: Liferay.Language.get('not-assigned')}
 						</p>
 					</ClayInput.GroupItem>
 
 					<ClayInput.GroupItem shrink>
-						<ClayButtonWithIcon
-							aria-label={Liferay.Language.get('assign-field')}
-							displayType="secondary"
-							onClick={onClick}
-							symbol="plus"
-							title={Liferay.Language.get('assign-field')}
+						<UpdateButton
+							field={field}
+							label={label}
+							onClearSelection={onClearSelection}
+							openSelectFieldModal={openSelectFieldModal}
 						/>
 					</ClayInput.GroupItem>
 				</ClayInput.Group>
 			</ClayTable.Cell>
 		</ClayTable.Row>
+	);
+}
+
+interface IUpdateButtonProps {
+	field?: IField;
+	label: string;
+	onClearSelection: () => void;
+	openSelectFieldModal: () => void;
+}
+
+function UpdateButton({
+	field,
+	label,
+	onClearSelection,
+	openSelectFieldModal,
+}: IUpdateButtonProps) {
+	return field ? (
+		<ClayDropDownWithItems
+			items={[
+				{
+					label: Liferay.Language.get('change-assignment'),
+					onClick: openSelectFieldModal,
+					symbolLeft: 'change',
+				},
+				{
+					label: Liferay.Language.get('clear-assignment'),
+					onClick: onClearSelection,
+					symbolLeft: 'times-circle',
+				},
+			]}
+			trigger={
+				<ClayButtonWithIcon
+					aria-label={sub(
+						Liferay.Language.get('view-x-options'),
+						label
+					)}
+					displayType="secondary"
+					size="sm"
+					symbol="ellipsis-v"
+					title={sub(Liferay.Language.get('view-x-options'), label)}
+				/>
+			}
+		/>
+	) : (
+		<ClayButtonWithIcon
+			aria-label={Liferay.Language.get('assign-field')}
+			displayType="secondary"
+			onClick={openSelectFieldModal}
+			symbol="plus"
+			title={Liferay.Language.get('assign-field')}
+		/>
 	);
 }

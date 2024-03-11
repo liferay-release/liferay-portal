@@ -125,7 +125,22 @@ export function getMDFRequestFromDTO(mdfRequest: MDFRequestDTO): MDFRequest {
 						weeksAiring,
 					},
 					activityStatus,
-					budgets: actToBgts || [],
+					budgets:
+						actToBgts?.map((budgetIem) => {
+							const {
+								cost,
+								expense,
+								externalReferenceCode,
+								id,
+							} = budgetIem;
+
+							return {
+								cost: cost ? cost : 0,
+								expense: expense ? expense : {},
+								externalReferenceCode,
+								id,
+							};
+						}) || [],
 					claimPercent: mdfRequest.claimPercent,
 					dateCreated: dateCreated?.split('T')[0],
 					endDate: endDate?.split('T')[0],

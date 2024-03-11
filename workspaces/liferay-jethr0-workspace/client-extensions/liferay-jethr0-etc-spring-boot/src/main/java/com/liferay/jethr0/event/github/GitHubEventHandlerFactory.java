@@ -60,9 +60,46 @@ public class GitHubEventHandlerFactory extends BaseEventHandlerFactory {
 						return new ReopenGitHubCommentEventHandler(
 							eventHandlerContext, messageJSONObject);
 					}
-					else if (body.startsWith("ci:test")) {
-						return new TestGitHubCommentEventHandler(
+					else if (body.startsWith("ci:report")) {
+						return new ReportGitHubCommentEventHandler(
 							eventHandlerContext, messageJSONObject);
+					}
+					else if (body.startsWith("ci:stop")) {
+						return new StopGitHubCommentEventHandler(
+							eventHandlerContext, messageJSONObject);
+					}
+					else if (body.startsWith("ci:test")) {
+						JSONObject repositoryJSONObject =
+							messageJSONObject.getJSONObject("repository");
+
+						String repositoryName = repositoryJSONObject.getString(
+							"name");
+
+						if (repositoryName.equals(
+								"liferay-fix-pack-builder-ee")) {
+
+							return new FixpackTestGitHubCommentEventHandler(
+								eventHandlerContext, messageJSONObject);
+						}
+						else if (repositoryName.equals("liferay-jenkins-ee")) {
+							return new JenkinsTestGitHubCommentEventHandler(
+								eventHandlerContext, messageJSONObject);
+						}
+						else if (repositoryName.equals("liferay-portal") ||
+								 repositoryName.equals("liferay-portal-ee")) {
+
+							return new PortalTestGitHubCommentEventHandler(
+								eventHandlerContext, messageJSONObject);
+						}
+						else if (repositoryName.equals(
+									"liferay-qa-websites-ee")) {
+
+							return new QAWebsitesTestGitHubCommentEventHandler(
+								eventHandlerContext, messageJSONObject);
+						}
+
+						throw new IllegalArgumentException(
+							"Invalid repository " + repositoryName);
 					}
 
 					throw new IllegalArgumentException(

@@ -11,6 +11,7 @@ import com.liferay.osb.faro.provisioning.client.constants.ProductConstants;
 import com.liferay.osb.faro.provisioning.client.exception.NoSuchCorpProjectException;
 import com.liferay.osb.faro.provisioning.client.exception.NoSuchRoleException;
 import com.liferay.osb.faro.provisioning.client.model.OSBAccountEntry;
+import com.liferay.osb.faro.provisioning.client.model.OSBOfferingEntry;
 import com.liferay.osb.faro.provisioning.client.util.KoroneikiHttpUtil;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Account;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Contact;
@@ -26,6 +27,7 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -183,7 +185,89 @@ public class ProvisioningClientImpl implements ProvisioningClient {
 	public OSBAccountEntry getOSBAccountEntry(String corpProjectUuid)
 		throws Exception {
 
-		return new OSBAccountEntry(_getCorpProjectAccount(corpProjectUuid));
+		if (!corpProjectUuid.contains("Test")) {
+			return new OSBAccountEntry(_getCorpProjectAccount(corpProjectUuid));
+		}
+
+		return new OSBAccountEntry() {
+			{
+				List<OSBOfferingEntry> osbOfferingEntries = new ArrayList<>();
+
+				OSBOfferingEntry osbOfferingEntry = new OSBOfferingEntry();
+
+				if (corpProjectUuid.endsWith("BusinessLXCTest")) {
+					osbOfferingEntry.setProductEntryId(
+						ProductConstants.LXC_BUSINESS_PRODUCT_ENTRY_ID);
+				}
+				else if (corpProjectUuid.endsWith("BusinessTest")) {
+					osbOfferingEntry.setProductEntryId(
+						ProductConstants.BUSINESS_PRODUCT_ENTRY_ID);
+				}
+				else if (corpProjectUuid.endsWith("EnterpriseLXCTest")) {
+					osbOfferingEntry.setProductEntryId(
+						ProductConstants.LXC_ENTERPRISE_PRODUCT_ENTRY_ID);
+				}
+				else if (corpProjectUuid.endsWith("EnterpriseTest")) {
+					osbOfferingEntry.setProductEntryId(
+						ProductConstants.ENTERPRISE_PRODUCT_ENTRY_ID);
+				}
+				else if (corpProjectUuid.endsWith("ProLXCTest")) {
+					osbOfferingEntry.setProductEntryId(
+						ProductConstants.LXC_PRO_PRODUCT_ENTRY_ID);
+				}
+
+				osbOfferingEntry.setQuantity(1);
+				osbOfferingEntry.setStartDate(new Date());
+				osbOfferingEntry.setStatus(
+					ProductConstants.OSB_OFFERING_ENTRY_STATUS_ACTIVE);
+
+				osbOfferingEntries.add(osbOfferingEntry);
+
+				if (corpProjectUuid.contains("AddOn")) {
+					OSBOfferingEntry contactsOSBOfferingEntry =
+						new OSBOfferingEntry();
+					OSBOfferingEntry trackedPagesOSBOfferingEntry =
+						new OSBOfferingEntry();
+
+					if (corpProjectUuid.endsWith("BusinessLXCTest") ||
+						corpProjectUuid.endsWith("BusinessTest")) {
+
+						contactsOSBOfferingEntry.setProductEntryId(
+							ProductConstants.
+								BUSINESS_CONTACTS_PRODUCT_ENTRY_ID);
+						trackedPagesOSBOfferingEntry.setProductEntryId(
+							ProductConstants.
+								BUSINESS_TRACKED_PAGES_PRODUCT_ENTRY_ID);
+					}
+					else if (corpProjectUuid.endsWith("EnterpriseLXCTest") ||
+							 corpProjectUuid.endsWith("EnterpriseTest")) {
+
+						contactsOSBOfferingEntry.setProductEntryId(
+							ProductConstants.
+								ENTERPRISE_CONTACTS_PRODUCT_ENTRY_ID);
+						trackedPagesOSBOfferingEntry.setProductEntryId(
+							ProductConstants.
+								ENTERPRISE_TRACKED_PAGES_PRODUCT_ENTRY_ID);
+					}
+
+					contactsOSBOfferingEntry.setQuantity(1);
+					contactsOSBOfferingEntry.setStartDate(new Date());
+					contactsOSBOfferingEntry.setStatus(
+						ProductConstants.OSB_OFFERING_ENTRY_STATUS_ACTIVE);
+
+					osbOfferingEntries.add(contactsOSBOfferingEntry);
+
+					trackedPagesOSBOfferingEntry.setQuantity(1);
+					trackedPagesOSBOfferingEntry.setStartDate(new Date());
+					trackedPagesOSBOfferingEntry.setStatus(
+						ProductConstants.OSB_OFFERING_ENTRY_STATUS_ACTIVE);
+
+					osbOfferingEntries.add(trackedPagesOSBOfferingEntry);
+				}
+
+				setOfferingEntries(osbOfferingEntries);
+			}
+		};
 	}
 
 	@Override

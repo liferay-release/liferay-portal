@@ -985,6 +985,12 @@ public class TestrayImporter {
 
 						Map<String, String> propertiesMap = new HashMap<>();
 
+						TopLevelBuild testTopLevelBuild = getTopLevelBuild();
+
+						propertiesMap.put(
+							"testray.build.date",
+							testTopLevelBuild.getTestrayBuildDateString());
+
 						propertiesMap.put(
 							"testray.build.name", testrayBuild.getName());
 

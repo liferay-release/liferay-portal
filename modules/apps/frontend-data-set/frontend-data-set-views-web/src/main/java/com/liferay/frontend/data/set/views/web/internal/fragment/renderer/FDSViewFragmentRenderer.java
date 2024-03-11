@@ -263,6 +263,18 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		Set<ObjectEntry> fdsFieldObjectEntries = _getFDSFieldObjectEntries(
 			fdsViewObjectDefinition, fdsViewObjectEntry);
 
+		Collection<ObjectEntry> fdsCardsSectionObjectEntries = null;
+		Collection<ObjectEntry> fdsListSectionObjectEntries = null;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-10735")) {
+			fdsCardsSectionObjectEntries = _getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSCardsSectionRelationship");
+			fdsListSectionObjectEntries = _getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSListSectionRelationship");
+		}
+
 		_reactRenderer.renderReact(
 			componentDescriptor,
 			HashMapBuilder.<String, Object>put(
@@ -296,19 +308,10 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 				"style", "fluid"
 			).put(
 				"views",
-				JSONUtil.putAll(
-					JSONUtil.put(
-						"contentRenderer", "table"
-					).put(
-						"name", "table"
-					).put(
-						"schema",
-						JSONUtil.put(
-							"fields",
-							_getFieldsJSONArray(
-								fragmentEntryLink.getCompanyId(),
-								fdsFieldObjectEntries))
-					))
+				_getFDSViewsJSONArray(
+					fragmentEntryLink.getCompanyId(),
+					fdsCardsSectionObjectEntries, fdsFieldObjectEntries,
+					fdsListSectionObjectEntries, httpServletRequest)
 			).build(),
 			httpServletRequest, writer);
 
@@ -410,6 +413,26 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		);
 	}
 
+	private JSONObject _getFDSCardsViewJSONObject(
+			Collection<ObjectEntry> fdsCardsSectionObjectEntries,
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		return JSONUtil.put(
+			"contentRenderer", "cards"
+		).put(
+			"default", false
+		).put(
+			"label", _language.get(httpServletRequest, "cards")
+		).put(
+			"name", "cards"
+		).put(
+			"schema", _getViewSchemaJSONObject(fdsCardsSectionObjectEntries)
+		).put(
+			"thumbnail", "cards2"
+		);
+	}
+
 	private Set<ObjectEntry> _getFDSFieldObjectEntries(
 			ObjectDefinition fdsViewObjectDefinition,
 			ObjectEntry fdsViewObjectEntry)
@@ -431,6 +454,91 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 				"fdsViewFDSFieldRelationship"));
 
 		return fdsFieldObjectEntries;
+	}
+
+	private JSONObject _getFDSListViewJSONObject(
+			Collection<ObjectEntry> fdsListSectionObjectEntries,
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		return JSONUtil.put(
+			"contentRenderer", "list"
+		).put(
+			"default", false
+		).put(
+			"label", _language.get(httpServletRequest, "list")
+		).put(
+			"name", "list"
+		).put(
+			"schema", _getViewSchemaJSONObject(fdsListSectionObjectEntries)
+		).put(
+			"thumbnail", "list"
+		);
+	}
+
+	private JSONObject _getFDSTableViewJSONObject(
+			long companyId, Set<ObjectEntry> fdsFieldObjectEntries,
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		return JSONUtil.put(
+			"contentRenderer", "table"
+		).put(
+			"default", !FeatureFlagManagerUtil.isEnabled("LPD-10735")
+		).put(
+			"label", _language.get(httpServletRequest, "table")
+		).put(
+			"name", "table"
+		).put(
+			"schema",
+			JSONUtil.put(
+				"fields", _getFieldsJSONArray(companyId, fdsFieldObjectEntries))
+		).put(
+			"thumbnail", "table"
+		);
+	}
+
+	private JSONArray _getFDSViewsJSONArray(
+			long companyId,
+			Collection<ObjectEntry> fdsCardsSectionObjectEntries,
+			Set<ObjectEntry> fdsFieldObjectEntries,
+			Collection<ObjectEntry> fdsListSectionObjectEntries,
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		JSONArray viewsJSONArray = _jsonFactory.createJSONArray();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-10735")) {
+			if (!fdsCardsSectionObjectEntries.isEmpty()) {
+				viewsJSONArray.put(
+					_getFDSCardsViewJSONObject(
+						fdsCardsSectionObjectEntries, httpServletRequest));
+			}
+
+			if (!fdsListSectionObjectEntries.isEmpty()) {
+				viewsJSONArray.put(
+					_getFDSListViewJSONObject(
+						fdsListSectionObjectEntries, httpServletRequest));
+			}
+
+			if (!fdsFieldObjectEntries.isEmpty()) {
+				viewsJSONArray.put(
+					_getFDSTableViewJSONObject(
+						companyId, fdsFieldObjectEntries, httpServletRequest));
+			}
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-10735") ||
+			(fdsCardsSectionObjectEntries.isEmpty() &&
+			 fdsFieldObjectEntries.isEmpty() &&
+			 fdsListSectionObjectEntries.isEmpty())) {
+
+			viewsJSONArray.put(
+				_getFDSTableViewJSONObject(
+					companyId, fdsFieldObjectEntries, httpServletRequest));
+		}
+
+		return viewsJSONArray;
 	}
 
 	private JSONArray _getFieldsJSONArray(
@@ -887,6 +995,23 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		}
 
 		return String.valueOf(fdsFieldProperties.get(fallbackKey));
+	}
+
+	private JSONObject _getViewSchemaJSONObject(
+			Collection<ObjectEntry> fdsViewObjectEntries)
+		throws Exception {
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
+
+		for (ObjectEntry objectEntry : fdsViewObjectEntries) {
+			Map<String, Object> properties = objectEntry.getProperties();
+
+			jsonObject.put(
+				String.valueOf(properties.get("name")),
+				String.valueOf(properties.get("fieldName")));
+		}
+
+		return jsonObject;
 	}
 
 	private String _interpolateURL(

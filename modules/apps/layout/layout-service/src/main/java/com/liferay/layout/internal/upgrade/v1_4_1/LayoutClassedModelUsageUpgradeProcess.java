@@ -198,10 +198,13 @@ public class LayoutClassedModelUsageUpgradeProcess extends UpgradeProcess {
 				StringBundler.concat(
 					"select Layout.plid, LayoutPageTemplateEntry.type_ from ",
 					"Layout left join LayoutPageTemplateEntry on ",
-					"(Layout.classPK = 0 and LayoutPageTemplateEntry.plid = ",
-					plid,
+					"(Layout.classPK = ? and LayoutPageTemplateEntry.plid = ? ",
 					") or (LayoutPageTemplateEntry.plid = Layout.classPK) ",
-					"where Layout.plid = ", plid))) {
+					"where Layout.plid = ?"))) {
+
+			preparedStatement.setLong(1, 0);
+			preparedStatement.setLong(2, plid);
+			preparedStatement.setLong(3, plid);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
@@ -233,17 +236,22 @@ public class LayoutClassedModelUsageUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"select 1 from LayoutClassedModelUsage where classNameId ",
-					"= ", classNameId, " and classPK = ", classPK,
-					" and containerKey = ", fragmentEntryLinkId,
-					" and containerType = ", _fragmentEntryLinkClassNameId,
-					" and plid = ", plid));
-			ResultSet resultSet = preparedStatement.executeQuery()) {
+					"= ? and classPK = ? and containerKey = ? and ",
+					"containerType = ? and plid = ?"))) {
 
-			if (resultSet.next()) {
-				return true;
+			preparedStatement.setLong(1, classNameId);
+			preparedStatement.setLong(2, classPK);
+			preparedStatement.setString(3, String.valueOf(fragmentEntryLinkId));
+			preparedStatement.setLong(4, _fragmentEntryLinkClassNameId);
+			preparedStatement.setLong(5, plid);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return true;
+				}
+
+				return false;
 			}
-
-			return false;
 		}
 	}
 
@@ -251,18 +259,20 @@ public class LayoutClassedModelUsageUpgradeProcess extends UpgradeProcess {
 		throws Exception {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				SQLTransformer.transform(
-					StringBundler.concat(
-						"select 1 from AssetEntry where classNameId = ",
-						classNameId, " and classPK = ", classPK,
-						" and visible = [$TRUE$]")));
-			ResultSet resultSet = preparedStatement.executeQuery()) {
+				"select 1 from AssetEntry where classNameId = ? and classPK " +
+					"= ? and visible = ?")) {
 
-			if (resultSet.next()) {
-				return true;
+			preparedStatement.setLong(1, classNameId);
+			preparedStatement.setLong(2, classPK);
+			preparedStatement.setBoolean(3, true);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return true;
+				}
+
+				return false;
 			}
-
-			return false;
 		}
 	}
 

@@ -49,6 +49,7 @@ export default {
 	'associated-requirements': 'Associated Requirements',
 	'at-least-one-environment-stack-is-required':
 		'At least one environment stack is required.',
+	'at-least-one-run-is-required': 'At least one run is required',
 	'attachment': 'Attachment',
 	'attachments': 'Attachments',
 	'attachments-x': 'Attachments ({0})',
@@ -388,7 +389,7 @@ export default {
 	'testray-user': ' User',
 	'tests': 'Tests',
 	'the-component-name-already-exists': 'The component name already exists.',
-	'the-issue-x-does-not-exists': 'The issue(s) {0} does not exists.',
+	'the-issue-x-does-not-exists': 'The issue(s) {0} do not exist.',
 	'the-link-url-must-be-a-valid-url': 'The link URL must be a valid URL.',
 	'the-name-already-exists': 'The name already exists.',
 	'the-project-cannot-be-deleted-because-it-has-associated-builds':

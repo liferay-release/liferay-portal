@@ -110,6 +110,15 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										</span>
 									</c:otherwise>
 								</c:choose>
+
+								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10626") && !journalDisplayContext.hasGuestViewPermission(curArticle) %>'>
+									<clay:icon
+										aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+										cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
+										data-title="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+										symbol="lock"
+									/>
+								</c:if>
 							</div>
 
 							<span class="c-pb-1 c-pt-1 text-secondary">
@@ -218,18 +227,19 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 											href="<%= editURL %>"
 											label="<%= title %>"
 										/>
+
+										<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10626") && !journalDisplayContext.hasGuestViewPermission(curArticle) %>'>
+											<clay:icon
+												aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+												cssClass="c-ml-1 c-mt-0 lfr-portal-tooltip text-4 text-secondary"
+												data-title="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+												symbol="lock"
+											/>
+										</c:if>
 									</div>
 								</div>
 							</div>
 						</liferay-ui:search-container-column-text>
-
-						<c:if test='<%= !FeatureFlagManagerUtil.isEnabled("LPS-194763") %>'>
-							<liferay-ui:search-container-column-text
-								cssClass="table-cell-expand table-cell-minw-200 text-truncate"
-								name="description"
-								value="<%= StringUtil.shorten(HtmlUtil.stripHtml(curArticle.getDescription(locale)), 200) %>"
-							/>
-						</c:if>
 
 						<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 							<liferay-ui:search-container-column-text
@@ -276,81 +286,38 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							/>
 						</liferay-ui:search-container-column-text>
 
-						<c:choose>
-							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-194763") %>'>
-								<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
+						<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
 
-									<%
-									DDMStructure ddmStructure = curArticle.getDDMStructure();
-									%>
+							<%
+							DDMStructure ddmStructure = curArticle.getDDMStructure();
+							%>
 
-									<liferay-ui:search-container-column-text
-										cssClass="table-cell-expand-smallest table-cell-minw-100"
-										name="type"
-										value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
-									/>
-								</c:if>
+							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-100"
+								name="type"
+								value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
+							/>
+						</c:if>
 
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="modified-date"
-									value="<%= curArticle.getModifiedDate() %>"
-								/>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="modified-date"
+							value="<%= curArticle.getModifiedDate() %>"
+						/>
 
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="display-date"
-									value="<%= curArticle.getDisplayDate() %>"
-								/>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="display-date"
+							value="<%= curArticle.getDisplayDate() %>"
+						/>
 
-								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11218") %>'>
-									<liferay-ui:search-container-column-date
-										cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-										name="create-date"
-										value="<%= curArticle.getCreateDate() %>"
-									/>
-								</c:if>
-							</c:when>
-							<c:otherwise>
-								<liferay-ui:search-container-column-text
-									cssClass="table-cell-expand-smallest"
-									name="modified"
-								>
-
-									<%
-									Date modifiedDate = curArticle.getModifiedDate();
-
-									String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
-									%>
-
-									<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
-								</liferay-ui:search-container-column-text>
-
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="display-date"
-									value="<%= curArticle.getDisplayDate() %>"
-								/>
-
-								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11218") %>'>
-									<liferay-ui:search-container-column-date
-										cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-										name="create-date"
-										value="<%= curArticle.getCreateDate() %>"
-									/>
-								</c:if>
-
-								<%
-								DDMStructure ddmStructure = curArticle.getDDMStructure();
-								%>
-
-								<liferay-ui:search-container-column-text
-									cssClass="table-cell-expand-smallest table-cell-minw-100"
-									name="type"
-									value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
-								/>
-							</c:otherwise>
-						</c:choose>
+						<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11218") %>'>
+							<liferay-ui:search-container-column-date
+								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+								name="create-date"
+								value="<%= curArticle.getCreateDate() %>"
+							/>
+						</c:if>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
@@ -506,12 +473,6 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								</div>
 							</div>
 						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							cssClass="table-cell-expand table-cell-minw-200 text-truncate"
-							name="description"
-							value="<%= HtmlUtil.escape(curFolder.getDescription()) %>"
-						/>
 
 						<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
 							<liferay-ui:search-container-column-text

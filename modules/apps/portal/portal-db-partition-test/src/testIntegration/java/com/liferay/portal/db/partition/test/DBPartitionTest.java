@@ -60,18 +60,14 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 
 		createControlTable(TEST_CONTROL_TABLE_NAME);
 
-		addDBPartitions();
-
-		insertPartitionRequiredData();
+		BaseDBPartitionTestCase.setUpDBPartitions();
 	}
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		deletePartitionRequiredData();
+		BaseDBPartitionTestCase.tearDownDBPartitions();
 
-		removeDBPartitions();
-
-		dropTable(TEST_CONTROL_TABLE_NAME);
+		dropControlTable(TEST_CONTROL_TABLE_NAME);
 	}
 
 	@After
@@ -162,6 +158,31 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 				Assert.assertEquals(
 					finalClassNameId, className.getClassNameId());
 				Assert.assertEquals(finalClassNameValue, className.getValue());
+			});
+	}
+
+	@Test
+	public void testCopyConfiguration() throws Exception {
+		DBPartitionUtil.forEachCompanyId(
+			companyId -> {
+				int rowCount = -1;
+
+				try (PreparedStatement preparedStatement =
+						connection.prepareStatement(
+							"select count(1) from Configuration_");
+					ResultSet resultSet = preparedStatement.executeQuery()) {
+
+					if (resultSet.next()) {
+						rowCount = resultSet.getInt(1);
+					}
+				}
+
+				if (PortalInstancePool.getDefaultCompanyId() == companyId) {
+					Assert.assertTrue(rowCount > 0);
+				}
+				else {
+					Assert.assertEquals(0, rowCount);
+				}
 			});
 	}
 
@@ -389,14 +410,7 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 
 		dbPartitionUpgradeProcess.upgrade();
 
-		long[] expectedCompanyIds = null;
-
-		try (AutoCloseable autoCloseable =
-				ReflectionTestUtil.setFieldValueWithAutoCloseable(
-					PortalInstancePool.class, "_cacheEnabled", false)) {
-
-			expectedCompanyIds = PortalInstancePool.getCompanyIds();
-		}
+		long[] expectedCompanyIds = PortalInstancePool.getCompanyIds();
 
 		Arrays.sort(expectedCompanyIds);
 

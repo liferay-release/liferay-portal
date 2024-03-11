@@ -161,6 +161,10 @@ public class SegmentTestClassGroup extends BaseTestClassGroup {
 		return testClasses;
 	}
 
+	public boolean testAnalyticsCloud() {
+		return false;
+	}
+
 	protected SegmentTestClassGroup(
 		BatchTestClassGroup parentBatchTestClassGroup) {
 

@@ -5,6 +5,7 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayEmptyState from '@clayui/empty-state';
+import {ReactPortal} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -23,7 +24,7 @@ export default function ItemConfigurationSidebar() {
 	const itemConfigurationOpen = useSelector(selectItemConfigurationOpen);
 
 	return (
-		<div className="cadmin">
+		<ReactPortal className="cadmin">
 			<div
 				className={classNames(
 					'flex-column page-editor__item-configuration-sidebar',
@@ -31,6 +32,7 @@ export default function ItemConfigurationSidebar() {
 						[`page-editor__item-configuration-sidebar--open`]: itemConfigurationOpen,
 					}
 				)}
+				tabIndex={activeItemId ? null : 0}
 			>
 				{Liferay.FeatureFlags['LPD-10988'] ? (
 					<div className="d-flex d-md-none justify-content-end mr-2 mt-3">
@@ -70,6 +72,6 @@ export default function ItemConfigurationSidebar() {
 					/>
 				)}
 			</div>
-		</div>
+		</ReactPortal>
 	);
 }

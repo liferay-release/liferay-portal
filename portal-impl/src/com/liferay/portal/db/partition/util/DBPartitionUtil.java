@@ -95,9 +95,7 @@ public class DBPartitionUtil {
 						continue;
 					}
 
-					if (dbInspector.isControlTable(
-							_getCompanyIds(), tableName)) {
-
+					if (dbInspector.isControlTable(tableName)) {
 						statement.executeUpdate(
 							_dbPartitionDB.getCreateViewSQL(
 								_defaultPartitionName,
@@ -248,7 +246,8 @@ public class DBPartitionUtil {
 		return true;
 	}
 
-	public static void replaceByTable(Connection connection, String viewName)
+	public static void replaceByTable(
+			Connection connection, boolean copyData, String viewName)
 		throws Exception {
 
 		long companyId = getCurrentCompanyId();
@@ -267,10 +266,12 @@ public class DBPartitionUtil {
 					_defaultPartitionName, _getPartitionName(companyId),
 					viewName));
 
-			statement.executeUpdate(
-				_getCopyDataSQL(
-					_defaultPartitionName, _getPartitionName(companyId),
-					viewName, StringPool.BLANK));
+			if (copyData) {
+				statement.executeUpdate(
+					_getCopyDataSQL(
+						_defaultPartitionName, _getPartitionName(companyId),
+						viewName, StringPool.BLANK));
+			}
 		}
 	}
 
@@ -394,9 +395,7 @@ public class DBPartitionUtil {
 				while (resultSet.next()) {
 					String tableName = resultSet.getString("TABLE_NAME");
 
-					if (!dbInspector.isControlTable(
-							_getCompanyIds(), tableName)) {
-
+					if (!dbInspector.isControlTable(tableName)) {
 						continue;
 					}
 
@@ -446,9 +445,7 @@ public class DBPartitionUtil {
 				while (resultSet.next()) {
 					String tableName = resultSet.getString("TABLE_NAME");
 
-					if (dbInspector.isControlTable(
-							_getCompanyIds(), tableName)) {
-
+					if (dbInspector.isControlTable(tableName)) {
 						controlTableNames.add(tableName);
 
 						_extractTable(
@@ -779,9 +776,7 @@ public class DBPartitionUtil {
 				while (resultSet.next()) {
 					String tableName = resultSet.getString("TABLE_NAME");
 
-					if (!dbInspector.isControlTable(
-							_getCompanyIds(), tableName)) {
-
+					if (!dbInspector.isControlTable(tableName)) {
 						continue;
 					}
 
@@ -880,8 +875,9 @@ public class DBPartitionUtil {
 		try {
 			DBInspector dbInspector = new DBInspector(connection);
 
-			if (dbInspector.isControlTable(_getCompanyIds(), tableName) &&
-				!(CompanyThreadLocal.getCompanyId() == _defaultCompanyId)) {
+			if ((dbInspector.isControlTable(tableName) &&
+				 !(CompanyThreadLocal.getCompanyId() == _defaultCompanyId)) ||
+				dbInspector.hasView(tableName)) {
 
 				return true;
 			}
@@ -990,9 +986,7 @@ public class DBPartitionUtil {
 					DBInspector dbInspector = new DBInspector(connection);
 					String tableName = query[2];
 
-					if (!dbInspector.isControlTable(
-							_getCompanyIds(), tableName)) {
-
+					if (!dbInspector.isControlTable(tableName)) {
 						return returnValue;
 					}
 

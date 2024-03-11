@@ -4183,7 +4183,7 @@ public class ServiceBuilder {
 					dbNames.add("ctCollectionId");
 				}
 
-				if (_optimizeDBIndexes) {
+				if (_optimizeDBIndexes && !unique) {
 					for (String highCardinalityColumnName :
 							_highCardinalityColumnNames) {
 
@@ -4193,8 +4193,6 @@ public class ServiceBuilder {
 							dbNames.clear();
 
 							dbNames.add(highCardinalityColumnName);
-
-							unique = false;
 
 							break;
 						}
@@ -4934,12 +4932,12 @@ public class ServiceBuilder {
 			return _configuration;
 		}
 
-		_configuration = new Configuration(Configuration.VERSION_2_3_30);
+		_configuration = new Configuration(Configuration.VERSION_2_3_32);
 
 		_configuration.setNumberFormat("computer");
 
 		DefaultObjectWrapperBuilder defaultObjectWrapperBuilder =
-			new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_30);
+			new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_32);
 
 		_configuration.setObjectWrapper(defaultObjectWrapperBuilder.build());
 
@@ -8051,7 +8049,7 @@ public class ServiceBuilder {
 
 		content = header + "\n\n" + content;
 
-		String fileName = file.toString();
+		String fileName = _normalize(file.toString());
 
 		int startIndex = 0;
 

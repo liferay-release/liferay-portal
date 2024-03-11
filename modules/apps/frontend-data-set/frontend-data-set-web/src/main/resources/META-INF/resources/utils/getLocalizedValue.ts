@@ -13,11 +13,10 @@ interface ILocalizedItemDetails {
 	valuePath: Array<string>;
 }
 
-const languageId = Liferay.ThemeDisplay.getLanguageId();
-const BCP47LanguageId = Liferay.ThemeDisplay.getBCP47LanguageId();
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 function getLanguageKey(data: any): string {
+	const languageId = Liferay.ThemeDisplay.getLanguageId();
+	const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+
 	let languageKey = '';
 
 	if (data[languageId]) {
@@ -86,14 +85,16 @@ export function getLocalizedValue(
 			let formattedProperty = property;
 
 			if (property === 'LANG') {
-				if (navigatedValue[languageId]) {
-					formattedProperty = languageId;
+				if (navigatedValue[Liferay.ThemeDisplay.getLanguageId()]) {
+					formattedProperty = Liferay.ThemeDisplay.getLanguageId();
 				}
-				else if (navigatedValue[BCP47LanguageId]) {
-					formattedProperty = BCP47LanguageId;
+				else if (
+					navigatedValue[Liferay.ThemeDisplay.getBCP47LanguageId()]
+				) {
+					formattedProperty = Liferay.ThemeDisplay.getBCP47LanguageId();
 				}
 				else {
-					formattedProperty = defaultLanguageId;
+					formattedProperty = Liferay.ThemeDisplay.getDefaultLanguageId();
 				}
 			}
 

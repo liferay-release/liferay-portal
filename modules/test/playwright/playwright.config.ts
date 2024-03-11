@@ -5,9 +5,12 @@
 
 import {defineConfig} from '@playwright/test';
 
+import {config as analyticsSettingsWebConfig} from './tests/analytics-settings-web/config';
+import {config as announcementsWebConfig} from './tests/announcements-web/config';
 import {config as batchPlannerConfig} from './tests/batch-planner/config';
 import {config as clientExtensionWebConfig} from './tests/client-extension-web/config';
 import {config as commerceConfig} from './tests/commerce/config';
+import {config as documentLibraryWebConfig} from './tests/document-library-web/config';
 import {config as exportImportWebConfig} from './tests/export-import-web/config';
 import {config as frontendDataSetViewsWebConfig} from './tests/frontend-data-set-views-web/config';
 import {config as headlessBuilderImplConfig} from './tests/headless-builder-impl/config';
@@ -18,7 +21,9 @@ import {config as layoutAdminWebConfig} from './tests/layout-admin-web/config';
 import {config as layoutContentPageEditorWebConfig} from './tests/layout-content-page-editor-web/config';
 import {config as lockedItemsConfig} from './tests/locked-items-web/config';
 import {config as objectWebConfig} from './tests/object-web/config';
+import {config as osbFaroWebConfig} from './tests/osb-faro-web/config';
 import {config as portalWebConfig} from './tests/portal-web/config';
+import {config as productNavigationControlMenuWebConfig} from './tests/product-navigation-control-menu-web/config';
 import {config as productNavigationUserPersonalBarWebConfig} from './tests/product-navigation-user-personal-bar-web/config';
 import {config as stableConfig} from './tests/stable/config';
 import {config as usersAdminWebConfig} from './tests/users-admin-web/config';
@@ -29,9 +34,12 @@ export default defineConfig({
 	},
 	forbidOnly: !!process.env.CI,
 	projects: [
+		analyticsSettingsWebConfig,
+		announcementsWebConfig,
 		batchPlannerConfig,
 		clientExtensionWebConfig,
 		commerceConfig,
+		documentLibraryWebConfig,
 		exportImportWebConfig,
 		frontendDataSetViewsWebConfig,
 		headlessBuilderImplConfig,
@@ -42,7 +50,9 @@ export default defineConfig({
 		layoutContentPageEditorWebConfig,
 		lockedItemsConfig,
 		objectWebConfig,
+		osbFaroWebConfig,
 		portalWebConfig,
+		productNavigationControlMenuWebConfig,
 		productNavigationUserPersonalBarWebConfig,
 		stableConfig,
 		usersAdminWebConfig,

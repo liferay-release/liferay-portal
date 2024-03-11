@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayForm, {ClayCheckbox, ClayInput} from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {ClayResultsBar} from '@clayui/management-toolbar';
 import ClayModal from '@clayui/modal';
 import {
 	FDS_INTERNAL_CELL_RENDERERS,
@@ -16,14 +17,16 @@ import {
 	IInternalRenderer,
 } from '@liferay/frontend-data-set-web';
 import {InputLocalized, ManagementToolbar} from 'frontend-js-components-web';
-import {fetch, openModal} from 'frontend-js-web';
+import {fetch, openModal, sub} from 'frontend-js-web';
 import fuzzy from 'fuzzy';
 import React, {useEffect, useState} from 'react';
 
 import {IFDSViewSectionProps} from '../../../FDSView';
 import {FDSViewType} from '../../../FDSViews';
 import {getFields} from '../../../api';
+import AutoSearch from '../../../components/AutoSearch';
 import OrderableTable from '../../../components/OrderableTable';
+import SearchResultsMessage from '../../../components/SearchResultsMessage';
 import {
 	API_URL,
 	FUZZY_OPTIONS,
@@ -33,6 +36,9 @@ import openDefaultFailureToast from '../../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../../utils/openDefaultSuccessToast';
 
 import '../../../../css/TableVisualizationMode.scss';
+
+import ClayIcon from '@clayui/icon';
+
 import {IFDSField, IField} from '../../../utils/types';
 import {IBaseVisualizationMode} from '../VisualizationModes';
 import AddFieldsModalContent from './modal_content/AddFieldsModalContent';
@@ -236,16 +242,22 @@ const SaveFDSFieldsModalContent = ({
 		});
 	}, [fdsFields, fdsView]);
 
+	const getSelectedFieldsCount = () => {
+		if (!fields) {
+			return 0;
+		}
+
+		const selectedFields = fields.filter((field) => field.selected);
+
+		return selectedFields?.length || 0;
+	};
+
 	const isSelectAllChecked = () => {
 		if (!fields) {
 			return false;
 		}
 
-		const selectedFields = fields.filter((field) => field.selected);
-
-		const selectedFieldsCount = selectedFields?.length || 0;
-
-		return selectedFieldsCount === fields.length;
+		return getSelectedFieldsCount() === fields.length;
 	};
 
 	const isSelectAllIndeterminate = () => {
@@ -260,6 +272,8 @@ const SaveFDSFieldsModalContent = ({
 	};
 
 	const visibleFields = fields?.filter((field) => field.visible) ?? [];
+
+	const selectedFieldsCount = getSelectedFieldsCount();
 
 	return (
 		<>
@@ -290,39 +304,60 @@ const SaveFDSFieldsModalContent = ({
 								</ManagementToolbar.Item>
 
 								<ManagementToolbar.Item className="nav-item-expand">
-									<ClayInput.Group>
-										<ClayInput.GroupItem>
-											<ClayInput
-												insetAfter
-												onChange={(event) =>
-													onSearch(event.target.value)
-												}
-												placeholder={Liferay.Language.get(
-													'search'
-												)}
-												type="text"
-												value={query}
-											/>
+									<SearchResultsMessage
+										numberOfResults={visibleFields.length}
+									/>
 
-											<ClayInput.GroupInsetItem
-												after
-												tag="span"
-											>
-												<ClayButtonWithIcon
-													aria-label={Liferay.Language.get(
-														'search'
-													)}
-													displayType="unstyled"
-													symbol="search"
-												/>
-											</ClayInput.GroupInsetItem>
-										</ClayInput.GroupItem>
-									</ClayInput.Group>
+									<AutoSearch
+										onSearch={onSearch}
+										query={query}
+									/>
 								</ManagementToolbar.Item>
 							</ManagementToolbar.ItemList>
 						</ManagementToolbar.Container>
 
-						<div className="bg-light fields pb-2 pt-2">
+						{selectedFieldsCount > 0 && (
+							<ClayResultsBar>
+								<ClayResultsBar.Item expand>
+									<span className="component-text text-truncate-inline">
+										<span className="text-truncate">
+											{selectedFieldsCount > 1
+												? sub(
+														Liferay.Language.get(
+															'x-items-selected'
+														),
+														selectedFieldsCount
+												  )
+												: sub(
+														Liferay.Language.get(
+															'x-item-selected'
+														),
+														selectedFieldsCount
+												  )}
+										</span>
+									</span>
+								</ClayResultsBar.Item>
+
+								<ClayResultsBar.Item>
+									<ClayButton
+										className="component-link tbar-link"
+										displayType="unstyled"
+										onClick={() =>
+											setFields(
+												fields.map((field) => ({
+													...field,
+													selected: false,
+												}))
+											)
+										}
+									>
+										{Liferay.Language.get('deselect-all')}
+									</ClayButton>
+								</ClayResultsBar.Item>
+							</ClayResultsBar>
+						)}
+
+						<div className="bg-light fields mt-3 pb-2 pt-2 py-2">
 							{visibleFields.length ? (
 								visibleFields.map(({name, selected}) => (
 									<div
@@ -580,11 +615,21 @@ const EditFDSFieldModalContent = ({
 				<ClayForm.Group>
 					<ClayCheckbox
 						checked={fdsFieldSortable}
+						inline
 						label={Liferay.Language.get('sortable')}
 						onChange={({target: {checked}}) =>
 							setFSDFieldSortable(checked)
 						}
 					/>
+
+					<span
+						className="label-icon lfr-portal-tooltip ml-2"
+						title={Liferay.Language.get(
+							'if-checked,-data-set-items-can-be-sorted-by-this-field'
+						)}
+					>
+						<ClayIcon symbol="question-circle-full" />
+					</span>
 				</ClayForm.Group>
 			</ClayModal.Body>
 

@@ -68,10 +68,6 @@ public class QueueListener {
 					routingKey));
 		}
 
-		if (!routingKey.equals("koroneiki.account.update")) {
-			return;
-		}
-
 		try {
 			String body = new String(message.getBody(), "UTF-8");
 
@@ -95,20 +91,51 @@ public class QueueListener {
 				return;
 			}
 
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					StringBundler.concat(
-						"Updating account ", salesforceAccountKey,
-						" with name ",
-						koroneikiAccountJSONObject.getString("name")));
+			if (routingKey.equals("koroneiki.account.contactrole.assigned")) {
+				JSONObject contactJSONObject = jsonObject.getJSONObject(
+					"contact");
+
+				JSONObject contactRoleJSONObject = jsonObject.getJSONObject(
+					"contactRole");
+
+				_assignUser(
+					salesforceAccountKey,
+					koroneikiAccountJSONObject.getString("name"),
+					contactJSONObject.optString("emailAddress"),
+					contactRoleJSONObject.getString("name"));
 			}
+			else if (routingKey.equals(
+						"koroneiki.account.contactrole.unassigned")) {
 
-			String countryISOCode = _getCountryISOCode(
-				koroneikiAccountJSONObject);
+				JSONObject contactJSONObject = jsonObject.getJSONObject(
+					"contact");
 
-			_updateAccount(
-				salesforceAccountKey,
-				koroneikiAccountJSONObject.getString("name"), countryISOCode);
+				JSONObject contactRoleJSONObject = jsonObject.getJSONObject(
+					"contactRole");
+
+				_unassignUser(
+					salesforceAccountKey,
+					koroneikiAccountJSONObject.getString("name"),
+					contactJSONObject.optString("emailAddress"),
+					contactRoleJSONObject.getString("name"));
+			}
+			else if (routingKey.equals("koroneiki.account.update")) {
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						StringBundler.concat(
+							"Updating account ", salesforceAccountKey,
+							" with name ",
+							koroneikiAccountJSONObject.getString("name")));
+				}
+
+				String countryISOCode = _getCountryISOCode(
+					koroneikiAccountJSONObject);
+
+				_updateAccount(
+					salesforceAccountKey,
+					koroneikiAccountJSONObject.getString("name"),
+					countryISOCode);
+			}
 
 			channel.basicAck(deliveryTag, false);
 		}
@@ -122,6 +149,132 @@ public class QueueListener {
 				_log.error(exception2);
 			}
 		}
+	}
+
+	private void _assignUser(
+			String accountExternalReferenceCode, String accountName,
+			String contactEmailAddress, String contactRoleName)
+		throws Exception {
+
+		if (contactRoleName.equals(_KORONEIKI_ROLE_PARTNER_MANAGER_NAME)) {
+			_assignUserToAccount(
+				accountExternalReferenceCode, accountName, contactEmailAddress);
+			_assignUserToAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_MANAGER_NAME);
+			_assignUserToRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_MANAGER_NAME);
+		}
+		else if (contactRoleName.equals(_KORONEIKI_ROLE_PARTNER_MEMBER_NAME)) {
+			_assignUserToAccount(
+				accountExternalReferenceCode, accountName, contactEmailAddress);
+			_assignUserToAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_MARKETING_USER_NAME);
+			_assignUserToAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_SALES_USER_NAME);
+			_assignUserToRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_MARKETING_USER_NAME);
+			_assignUserToRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_SALES_USER_NAME);
+		}
+	}
+
+	private void _assignUserToAccount(
+		String accountExternalReferenceCode, String accountName,
+		String contactEmailAddress) {
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Assigning user ", contactEmailAddress, " to account ",
+					accountExternalReferenceCode, " with name ", accountName));
+		}
+
+		_post(
+			"",
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/accounts",
+				"/by-external-reference-code/", accountExternalReferenceCode,
+				"/user-accounts/by-email-address/", contactEmailAddress));
+	}
+
+	private void _assignUserToAccountRole(
+		String accountExternalReferenceCode, String contactEmailAddress,
+		String accountRoleName) {
+
+		long accountRoleId = _getAccountRoleId(
+			accountExternalReferenceCode, accountRoleName);
+
+		if (accountRoleId <= 0) {
+			return;
+		}
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Assigning user ", contactEmailAddress, " to account role ",
+					accountRoleName));
+		}
+
+		_post(
+			"",
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/accounts",
+				"/by-external-reference-code/", accountExternalReferenceCode,
+				"/account-roles/", accountRoleId,
+				"/user-accounts/by-email-address/", contactEmailAddress));
+	}
+
+	private void _assignUserToRegularRole(String emailAddress, String name) {
+		JSONObject userAccountJSONObject = _get(
+			uriBuilder -> uriBuilder.path(
+				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
+					emailAddress
+			).build());
+
+		Long userAccountId = userAccountJSONObject.getLong("id");
+
+		if (userAccountId <= 0) {
+			return;
+		}
+
+		long roleId = _getRegularRoleId(name);
+
+		if (roleId <= 0) {
+			return;
+		}
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Assigning user ", emailAddress, " to regular role ",
+					name));
+		}
+
+		_post(
+			"",
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/roles/", roleId,
+				"/association/user-account/", userAccountId));
+	}
+
+	private void _delete(String path) {
+		_getWebClient(
+		).delete(
+		).uri(
+			uriBuilder -> uriBuilder.path(
+				path
+			).build()
+		).accept(
+			MediaType.APPLICATION_JSON
+		).header(
+			HttpHeaders.AUTHORIZATION, _getAuthorization()
+		).retrieve(
+		).bodyToMono(
+			String.class
+		).block();
 	}
 
 	private JSONObject _get(Function<UriBuilder, URI> uriFunction) {
@@ -138,6 +291,36 @@ public class QueueListener {
 			).bodyToMono(
 				String.class
 			).block());
+	}
+
+	private long _getAccountRoleId(
+		String accountExternalReferenceCode, String accountRoleName) {
+
+		JSONObject accountRolesResponseJSONObject = _get(
+			uriBuilder -> uriBuilder.path(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/accounts",
+					"/by-external-reference-code/",
+					accountExternalReferenceCode, "/account-roles")
+			).queryParam(
+				"pageSize", "-1"
+			).build());
+
+		JSONArray accountRolesJSONArray =
+			accountRolesResponseJSONObject.getJSONArray("items");
+
+		for (int i = 0; i < accountRolesJSONArray.length(); i++) {
+			JSONObject accountRoleJSONObject =
+				accountRolesJSONArray.getJSONObject(i);
+
+			if (accountRoleName.equals(
+					accountRoleJSONObject.getString("name"))) {
+
+				return accountRoleJSONObject.getLong("id");
+			}
+		}
+
+		return 0;
 	}
 
 	private String _getAuthorization() {
@@ -188,30 +371,25 @@ public class QueueListener {
 				"pageSize", "-1"
 			).build());
 
-		Long partnerLevelTotalCount = partnerLevelsJSONObject.getLong(
-			"totalCount");
+		JSONObject proxyPartnerLevelTypeJSONObject =
+			proxyAccountJSONObject.getJSONObject("partnerLevelType");
 
-		if (partnerLevelTotalCount > 0) {
-			JSONObject proxyPartnerLevelTypeJSONObject =
-				proxyAccountJSONObject.getJSONObject("partnerLevelType");
+		JSONArray partnerLevelsJSONArray = partnerLevelsJSONObject.getJSONArray(
+			"items");
 
-			JSONArray partnerLevelsJSONArray =
-				partnerLevelsJSONObject.getJSONArray("items");
+		for (int i = 0; i < partnerLevelsJSONArray.length(); i++) {
+			JSONObject partnerLevelJSONObject =
+				partnerLevelsJSONArray.getJSONObject(i);
 
-			for (int i = 0; i < partnerLevelsJSONArray.length(); i++) {
-				JSONObject partnerLevelJSONObject =
-					partnerLevelsJSONArray.getJSONObject(i);
+			JSONObject partnerLevelTypeJSONObject =
+				partnerLevelJSONObject.getJSONObject("partnerLevelType");
 
-				JSONObject partnerLevelTypeJSONObject =
-					partnerLevelJSONObject.getJSONObject("partnerLevelType");
+			if (StringUtil.equalsIgnoreCase(
+					partnerLevelTypeJSONObject.getString("key"),
+					proxyPartnerLevelTypeJSONObject.getString("key"))) {
 
-				if (StringUtil.equalsIgnoreCase(
-						partnerLevelTypeJSONObject.getString("key"),
-						proxyPartnerLevelTypeJSONObject.getString("key"))) {
-
-					return partnerLevelJSONObject.getString(
-						"externalReferenceCode");
-				}
+				return partnerLevelJSONObject.getString(
+					"externalReferenceCode");
 			}
 		}
 
@@ -234,10 +412,6 @@ public class QueueListener {
 				"pageSize", "-1"
 			).build());
 
-		if (organizationsJSONObject.getLong("totalCount") <= 0) {
-			return 0;
-		}
-
 		JSONArray organizationsJSONArray = organizationsJSONObject.getJSONArray(
 			"items");
 
@@ -247,6 +421,29 @@ public class QueueListener {
 
 			if (regionName.equals(organizationJSONObject.getString("name"))) {
 				return organizationJSONObject.getLong("id");
+			}
+		}
+
+		return 0;
+	}
+
+	private long _getRegularRoleId(String name) {
+		JSONObject regularRolesResponseJSONObject = _get(
+			uriBuilder -> uriBuilder.path(
+				"/o/headless-admin-user/v1.0/roles"
+			).queryParam(
+				"pageSize", "-1"
+			).build());
+
+		JSONArray regularRolesJSONArray =
+			regularRolesResponseJSONObject.getJSONArray("items");
+
+		for (int i = 0; i < regularRolesJSONArray.length(); i++) {
+			JSONObject regularRoleJSONObject =
+				regularRolesJSONArray.getJSONObject(i);
+
+			if (name.equals(regularRoleJSONObject.getString("name"))) {
+				return regularRoleJSONObject.getLong("id");
 			}
 		}
 
@@ -375,6 +572,114 @@ public class QueueListener {
 			).block());
 	}
 
+	private void _unassignUser(
+			String accountExternalReferenceCode, String accountName,
+			String contactEmailAddress, String contactRoleName)
+		throws Exception {
+
+		if (contactRoleName.equals(_KORONEIKI_ROLE_PARTNER_MANAGER_NAME)) {
+			_unassignUserFromRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_MANAGER_NAME);
+			_unassignUserFromAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_MANAGER_NAME);
+			_unassignUserFromAccount(
+				accountExternalReferenceCode, accountName, contactEmailAddress);
+		}
+		else if (contactRoleName.equals(_KORONEIKI_ROLE_PARTNER_MEMBER_NAME)) {
+			_unassignUserFromRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_MARKETING_USER_NAME);
+			_unassignUserFromRegularRole(
+				contactEmailAddress, _ROLE_PARTNER_SALES_USER_NAME);
+			_unassignUserFromAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_MARKETING_USER_NAME);
+			_unassignUserFromAccountRole(
+				accountExternalReferenceCode, contactEmailAddress,
+				_ACCOUNT_ROLE_PARTNER_SALES_USER_NAME);
+			_unassignUserFromAccount(
+				accountExternalReferenceCode, accountName, contactEmailAddress);
+		}
+	}
+
+	private void _unassignUserFromAccount(
+		String accountExternalReferenceCode, String accountName,
+		String contactEmailAddress) {
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Unassigning user ", contactEmailAddress, " from account ",
+					accountExternalReferenceCode, " with name ", accountName));
+		}
+
+		_delete(
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/accounts",
+				"/by-external-reference-code/", accountExternalReferenceCode,
+				"/user-accounts/by-email-address/", contactEmailAddress));
+	}
+
+	private void _unassignUserFromAccountRole(
+		String accountExternalReferenceCode, String contactEmailAddress,
+		String accountRoleName) {
+
+		long accountRoleId = _getAccountRoleId(
+			accountExternalReferenceCode, accountRoleName);
+
+		if (accountRoleId <= 0) {
+			return;
+		}
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Unassigning user ", contactEmailAddress,
+					" from account role ", accountRoleName));
+		}
+
+		_delete(
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/accounts",
+				"/by-external-reference-code/", accountExternalReferenceCode,
+				"/account-roles/", accountRoleId,
+				"/user-accounts/by-email-address/", contactEmailAddress));
+	}
+
+	private void _unassignUserFromRegularRole(
+		String emailAddress, String name) {
+
+		JSONObject userAccountJSONObject = _get(
+			uriBuilder -> uriBuilder.path(
+				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
+					emailAddress
+			).build());
+
+		Long userAccountId = userAccountJSONObject.getLong("id");
+
+		if (userAccountId <= 0) {
+			return;
+		}
+
+		long roleId = _getRegularRoleId(name);
+
+		if (roleId <= 0) {
+			return;
+		}
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Unassigning user ", emailAddress, " from regular role ",
+					name));
+		}
+
+		_delete(
+			StringBundler.concat(
+				"/o/headless-admin-user/v1.0/roles/", roleId,
+				"/association/user-account/", userAccountId));
+	}
+
 	private void _updateAccount(
 			String externalReferenceCode, String name, String countryISOCode)
 		throws Exception {
@@ -470,6 +775,30 @@ public class QueueListener {
 			}
 		}
 	}
+
+	private static final String _ACCOUNT_ROLE_PARTNER_MANAGER_NAME =
+		"[Account] Partner Manager (PM)";
+
+	private static final String _ACCOUNT_ROLE_PARTNER_MARKETING_USER_NAME =
+		"[Account] Partner Marketing User (PMU)";
+
+	private static final String _ACCOUNT_ROLE_PARTNER_SALES_USER_NAME =
+		"[Account] Partner Sales User (PSU)";
+
+	private static final String _KORONEIKI_ROLE_PARTNER_MANAGER_NAME =
+		"Partner Manager";
+
+	private static final String _KORONEIKI_ROLE_PARTNER_MEMBER_NAME =
+		"Partner Member";
+
+	private static final String _ROLE_PARTNER_MANAGER_NAME =
+		"Partner Manager (PM)";
+
+	private static final String _ROLE_PARTNER_MARKETING_USER_NAME =
+		"Partner Marketing User (PMU)";
+
+	private static final String _ROLE_PARTNER_SALES_USER_NAME =
+		"Partner Sales User (PSU)";
 
 	private static final Log _log = LogFactory.getLog(QueueListener.class);
 

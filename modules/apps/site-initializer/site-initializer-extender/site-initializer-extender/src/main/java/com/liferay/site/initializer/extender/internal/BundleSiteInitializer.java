@@ -100,7 +100,6 @@ import com.liferay.object.admin.rest.dto.v1_0.util.ObjectActionUtil;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectRelationshipResource;
-import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectActionLocalService;
@@ -561,8 +560,29 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 			_invoke(() -> _addUserAccounts(serviceContext));
 
+			Map<String, ObjectDefinition>
+				accountEntryRestrictedObjectDefinitions = new HashMap<>();
+
 			_invoke(
 				() -> _addObjectDefinitions(
+					accountEntryRestrictedObjectDefinitions, serviceContext,
+					stringUtilReplaceValues));
+
+			_invoke(
+				() -> _addOrUpdateObjectRelationships(
+					serviceContext, stringUtilReplaceValues));
+			_invoke(
+				() -> _addOrUpdateObjectFields(
+					serviceContext, stringUtilReplaceValues));
+
+			_invoke(
+				() -> _addOrUpdateAccountEntryRestrictions(
+					accountEntryRestrictedObjectDefinitions, serviceContext));
+			_invoke(
+				() -> _addObjectOrUpdateActions(
+					serviceContext, stringUtilReplaceValues));
+			_invoke(
+				() -> _addOrUpdateObjectEntries(
 					serviceContext, siteNavigationMenuItemSettingsBuilder,
 					stringUtilReplaceValues));
 
@@ -1115,9 +1135,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 	}
 
 	private void _addObjectDefinitions(
+			Map<String, ObjectDefinition>
+				accountEntryRestrictedObjectDefinitions,
 			ServiceContext serviceContext,
-			SiteNavigationMenuItemSettingsBuilder
-				siteNavigationMenuItemSettingsBuilder,
 			Map<String, String> stringUtilReplaceValues)
 		throws Exception {
 
@@ -1145,9 +1165,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 			return;
 		}
 
-		Map<String, ObjectDefinition> accountEntryRestrictedObjectDefinitions =
-			new HashMap<>();
-
 		ObjectDefinitionResource.Builder objectDefinitionResourceBuilder =
 			_objectDefinitionResourceFactory.create();
 
@@ -1157,10 +1174,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 			).build();
 
 		for (String resourcePath : resourcePaths) {
-			if (resourcePath.endsWith(".object-actions.json")) {
-				continue;
-			}
-
 			String json = SiteInitializerUtil.read(
 				resourcePath, _servletContext);
 
@@ -1210,90 +1223,64 @@ public class BundleSiteInitializer implements SiteInitializer {
 			stringUtilReplaceValues.put(
 				"OBJECT_DEFINITION_ID:" + objectDefinition.getName(),
 				String.valueOf(objectDefinition.getId()));
+		}
+	}
 
-			if (Objects.equals(
-					objectDefinition.getScope(),
-					ObjectDefinitionConstants.SCOPE_COMPANY) &&
-				(existingObjectDefinition != null)) {
+	private void _addObjectOrUpdateActions(
+			ServiceContext serviceContext,
+			Map<String, String> stringUtilReplaceValues)
+		throws Exception {
 
+		Set<String> resourcePaths = _servletContext.getResourcePaths(
+			"/site-initializer/object-actions");
+
+		if (SetUtil.isEmpty(resourcePaths)) {
+			return;
+		}
+
+		for (String resourcePath : resourcePaths) {
+			String json = SiteInitializerUtil.read(
+				resourcePath, _servletContext);
+
+			json = _replace(json, stringUtilReplaceValues);
+
+			if (json == null) {
 				continue;
 			}
 
-			String objectActionsJSON = SiteInitializerUtil.read(
-				StringUtil.replaceLast(
-					resourcePath, ".json", ".object-actions.json"),
-				_servletContext);
+			JSONObject jsonObject = _jsonFactory.createJSONObject(json);
 
-			if (objectActionsJSON == null) {
+			JSONArray jsonArray = jsonObject.getJSONArray("object-actions");
+
+			if (JSONUtil.isEmpty(jsonArray)) {
 				continue;
 			}
-
-			JSONArray jsonArray = _jsonFactory.createJSONArray(
-				objectActionsJSON);
 
 			for (int i = 0; i < jsonArray.length(); i++) {
-				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				JSONObject objectActionJSONObject = jsonArray.getJSONObject(i);
 
-				JSONObject parametersJSONObject = jsonObject.getJSONObject(
-					"parameters");
+				JSONObject parametersJSONObject =
+					objectActionJSONObject.getJSONObject("parameters");
 
 				_objectActionLocalService.addOrUpdateObjectAction(
-					jsonObject.getString("externalReferenceCode"), 0,
-					serviceContext.getUserId(), objectDefinition.getId(),
-					jsonObject.getBoolean("active"),
-					jsonObject.getString("conditionExpression"),
-					jsonObject.getString("description"),
+					objectActionJSONObject.getString("externalReferenceCode"),
+					0, serviceContext.getUserId(),
+					jsonObject.getLong("objectDefinitionId"),
+					objectActionJSONObject.getBoolean("active"),
+					objectActionJSONObject.getString("conditionExpression"),
+					objectActionJSONObject.getString("description"),
 					SiteInitializerUtil.toMap(
-						jsonObject.getString("errorMessage")),
-					SiteInitializerUtil.toMap(jsonObject.getString("label")),
-					jsonObject.getString("name"),
-					jsonObject.getString("objectActionExecutorKey"),
-					jsonObject.getString("objectActionTriggerKey"),
+						objectActionJSONObject.getString("errorMessage")),
+					SiteInitializerUtil.toMap(
+						objectActionJSONObject.getString("label")),
+					objectActionJSONObject.getString("name"),
+					objectActionJSONObject.getString("objectActionExecutorKey"),
+					objectActionJSONObject.getString("objectActionTriggerKey"),
 					ObjectActionUtil.toParametersUnicodeProperties(
 						parametersJSONObject.toMap()),
-					jsonObject.getBoolean("system"));
+					objectActionJSONObject.getBoolean("system"));
 			}
 		}
-
-		_invoke(
-			() -> _addOrUpdateObjectRelationships(
-				serviceContext, stringUtilReplaceValues));
-
-		_invoke(
-			() -> _addOrUpdateObjectFields(
-				serviceContext, stringUtilReplaceValues));
-
-		for (Map.Entry<String, ObjectDefinition> entry :
-				accountEntryRestrictedObjectDefinitions.entrySet()) {
-
-			com.liferay.object.model.ObjectDefinition
-				serviceBuilderObjectDefinition =
-					_objectDefinitionLocalService.fetchObjectDefinition(
-						serviceContext.getCompanyId(), "C_" + entry.getKey());
-
-			com.liferay.object.model.ObjectField serviceBuilderObjectField =
-				_objectFieldLocalService.fetchObjectField(
-					serviceBuilderObjectDefinition.getObjectDefinitionId(),
-					entry.getValue(
-					).getAccountEntryRestrictedObjectFieldName());
-
-			if (serviceBuilderObjectDefinition.isDefaultStorageType()) {
-				_objectDefinitionLocalService.enableAccountEntryRestricted(
-					_objectRelationshipLocalService.
-						fetchObjectRelationshipByObjectFieldId2(
-							serviceBuilderObjectField.getObjectFieldId()));
-			}
-			else {
-				_objectDefinitionLocalService.
-					enableAccountEntryRestrictedForNondefaultStorageType(
-						serviceBuilderObjectField);
-			}
-		}
-
-		_invoke(
-			() -> _addOrUpdateObjectEntries(
-				serviceContext, siteNavigationMenuItemSettingsBuilder,
-				stringUtilReplaceValues));
 	}
 
 	private void _addOrganizationUser(
@@ -1357,6 +1344,40 @@ public class BundleSiteInitializer implements SiteInitializer {
 					resourcePath.substring(
 						0, resourcePath.indexOf(".metadata.json")),
 					serviceContext);
+			}
+		}
+	}
+
+	private void _addOrUpdateAccountEntryRestrictions(
+			Map<String, ObjectDefinition>
+				accountEntryRestrictedObjectDefinitions,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		for (Map.Entry<String, ObjectDefinition> entry :
+				accountEntryRestrictedObjectDefinitions.entrySet()) {
+
+			com.liferay.object.model.ObjectDefinition
+				serviceBuilderObjectDefinition =
+					_objectDefinitionLocalService.fetchObjectDefinition(
+						serviceContext.getCompanyId(), "C_" + entry.getKey());
+
+			com.liferay.object.model.ObjectField serviceBuilderObjectField =
+				_objectFieldLocalService.fetchObjectField(
+					serviceBuilderObjectDefinition.getObjectDefinitionId(),
+					entry.getValue(
+					).getAccountEntryRestrictedObjectFieldName());
+
+			if (serviceBuilderObjectDefinition.isDefaultStorageType()) {
+				_objectDefinitionLocalService.enableAccountEntryRestricted(
+					_objectRelationshipLocalService.
+						fetchObjectRelationshipByObjectFieldId2(
+							serviceBuilderObjectField.getObjectFieldId()));
+			}
+			else {
+				_objectDefinitionLocalService.
+					enableAccountEntryRestrictedForNondefaultStorageType(
+						serviceBuilderObjectField);
 			}
 		}
 	}

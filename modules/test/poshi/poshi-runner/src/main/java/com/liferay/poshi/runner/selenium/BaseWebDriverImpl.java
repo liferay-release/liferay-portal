@@ -448,7 +448,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertHTMLSourceTextNotPresent(String value) throws Exception {
 		if (isHTMLSourceTextPresent(value)) {
 			throw new Exception(
-				"Pattern \"" + value + "\" does exists in the HTML source");
+				"Pattern \"" + value + "\" exists in the HTML source");
 		}
 	}
 
@@ -456,7 +456,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertHTMLSourceTextPresent(String value) throws Exception {
 		if (!isHTMLSourceTextPresent(value)) {
 			throw new Exception(
-				"Pattern \"" + value + "\" does not exists in the HTML source");
+				"Pattern \"" + value + "\" does not exist in the HTML source");
 		}
 	}
 
@@ -2223,6 +2223,18 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		EmailCommands.replyToEmail(to, body);
 
 		pause("3000");
+	}
+
+	public Map<String, Object> returnCDPCommand(
+		String commandName, Map<String, Object> commandParameters) {
+
+		Augmenter augmenter = new Augmenter();
+
+		WebDriver webDriver = augmenter.augment(getWebDriver());
+
+		HasCdp hasCdp = (HasCdp)webDriver;
+
+		return hasCdp.executeCdpCommand(commandName, commandParameters);
 	}
 
 	@Override

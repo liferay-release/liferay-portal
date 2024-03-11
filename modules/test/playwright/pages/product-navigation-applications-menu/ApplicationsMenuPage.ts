@@ -8,6 +8,8 @@ import {Locator, Page, expect} from '@playwright/test';
 import {HomePage} from '../portal-web/HomePage';
 
 export class ApplicationsMenuPage {
+	private readonly aiCreatorLink: Locator;
+	private readonly announcementsItem: Locator;
 	private readonly apiBuilderMenuItem: Locator;
 	private readonly applicationsMenuTabButton: Locator;
 	private readonly clientExtensionsLink: Locator;
@@ -17,6 +19,7 @@ export class ApplicationsMenuPage {
 	private readonly controlPanelButton: Locator;
 	private readonly dataMigrationCenterMenuItem: Locator;
 	private readonly dataSetManagerMenuItem: Locator;
+	private readonly gogoShellItem: Locator;
 	private readonly homePage: HomePage;
 	private readonly instanceSettingsMenuItem: Locator;
 	private readonly oAuth2Administration: Locator;
@@ -27,6 +30,10 @@ export class ApplicationsMenuPage {
 	private readonly usersAndOrganizationsItem: Locator;
 
 	constructor(page: Page) {
+		this.announcementsItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Announcements and Alerts',
+		});
 		this.apiBuilderMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'API Builder',
@@ -85,6 +92,14 @@ export class ApplicationsMenuPage {
 			exact: true,
 			name: 'Users and Organizations',
 		});
+		this.aiCreatorLink = page.getByRole('link', {
+			exact: true,
+			name: 'AI Creator',
+		});
+		this.gogoShellItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Gogo Shell',
+		});
 	}
 
 	async goto() {
@@ -92,6 +107,11 @@ export class ApplicationsMenuPage {
 		await this.homePage.openApplicationMenu();
 
 		await expect(this.applicationsMenuTabButton).toBeVisible();
+	}
+
+	async goToAnnouncements() {
+		await this.goToApplicationsMenu();
+		await this.announcementsItem.click();
 	}
 
 	async goToDataSetManager() {
@@ -102,6 +122,11 @@ export class ApplicationsMenuPage {
 	async goToApplicationsMenu() {
 		await this.goto();
 		await this.applicationsMenuTabButton.click();
+	}
+
+	async goToAICreator() {
+		await this.goToInstanceSettings();
+		await this.aiCreatorLink.click();
 	}
 
 	async goToClientExtensions() {
@@ -117,6 +142,11 @@ export class ApplicationsMenuPage {
 	async goToAPIBuilder() {
 		await this.goToControlPanel();
 		await this.apiBuilderMenuItem.click();
+	}
+
+	async goToGogoShell() {
+		await this.goToControlPanel();
+		await this.gogoShellItem.click();
 	}
 
 	async goToObjects() {

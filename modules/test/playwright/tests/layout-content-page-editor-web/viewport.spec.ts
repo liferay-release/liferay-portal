@@ -10,6 +10,7 @@ import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest'
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {liferayConfig} from '../../liferay.config';
 import getRandomString from '../../utils/getRandomString';
 import {pageEditorPagesTest} from './fixtures/pageEditorPagesTest';
 import getFragmentDefinition from './utils/getFragmentDefinition';
@@ -64,7 +65,7 @@ test('shows correct sections on each configuration panel when viewport is not De
 	pageEditorPage,
 	site,
 }) => {
-	await page.goto('/');
+	await page.goto(liferayConfig.environment.baseUrl);
 
 	// Create a page with a Heading fragment
 

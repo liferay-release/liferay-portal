@@ -104,11 +104,49 @@ export function FormGeneralPanel({item}) {
 		<>
 			<FormOptions item={item} onValueSelect={onValueSelect} />
 
-			<CommonStyles
-				commonStylesValues={item.config.styles || {}}
-				item={item}
-				role={COMMON_STYLES_ROLES.general}
-			/>
+			{formIsMapped(item) && (
+				<div className="mb-3 panel-group-sm">
+					<ClayPanel
+						collapsable
+						defaultExpanded
+						displayTitle={Liferay.Language.get(
+							'actions-after-submit'
+						)}
+						displayType="unstyled"
+						showCollapseIcon
+					>
+						<ClayPanel.Body>
+							<SuccessInteractionOptions
+								item={item}
+								onValueSelect={onValueSelect}
+							/>
+						</ClayPanel.Body>
+					</ClayPanel>
+				</div>
+			)}
+
+			<div className="mb-3 panel-group-sm">
+				<ClayPanel
+					collapsable
+					defaultExpanded
+					displayTitle={Liferay.Language.get('frame')}
+					displayType="unstyled"
+					showCollapseIcon
+				>
+					<ClayPanel.Body>
+						{formIsMapped(item) ? (
+							<ContainerDisplayOptions item={item} />
+						) : null}
+
+						<CommonStyles
+							commonStylesValues={item.config.styles || {}}
+							embedInCollapsableSection={false}
+							item={item}
+							role={COMMON_STYLES_ROLES.general}
+						/>
+					</ClayPanel.Body>
+				</ClayPanel>
+			</div>
 		</>
 	);
 }
@@ -128,17 +166,6 @@ function FormOptions({item, onValueSelect}) {
 						item={item}
 						onValueSelect={onValueSelect}
 					/>
-
-					{formIsMapped(item) && (
-						<>
-							<SuccessInteractionOptions
-								item={item}
-								onValueSelect={onValueSelect}
-							/>
-
-							<ContainerDisplayOptions item={item} />
-						</>
-					)}
 				</ClayPanel.Body>
 			</ClayPanel>
 		</div>
@@ -229,7 +256,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		<>
 			<SelectField
 				field={{
-					label: Liferay.Language.get('success-interaction'),
+					label: Liferay.Language.get('success-action'),
 					name: 'source',
 					typeOptions: {
 						validValues: SUCCESS_MESSAGE_OPTIONS,
@@ -287,7 +314,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 					<ClayForm.Group small>
 						<ClayToggle
 							label={Liferay.Language.get(
-								'preview-embedded-message'
+								'preview-success-message'
 							)}
 							onToggle={(checked) =>
 								updateItemLocalConfig(item.itemId, {
@@ -358,7 +385,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 						<CheckboxField
 							field={{
 								label: Liferay.Language.get(
-									'show-notification-when-form-is-submitted'
+									'show-notification-after-submit'
 								),
 								name: 'showNotification',
 							}}

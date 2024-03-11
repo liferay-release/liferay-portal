@@ -225,11 +225,9 @@ export function removeProtocolURL(url: string) {
 }
 
 async function submitSpecification(
-	appId: string,
 	productId: number,
 	productSpecificationId: number,
 	key: string,
-	title: string,
 	value: string
 ): Promise<number> {
 	const specifications = await getSpecifications();
@@ -258,7 +256,7 @@ async function submitSpecification(
 				specificationKey: key,
 				value: {en_US: value},
 			},
-			id: appId,
+			id: productId,
 		});
 
 		return id;
@@ -266,19 +264,15 @@ async function submitSpecification(
 }
 
 export async function saveSpecification(
-	appId: string,
 	productId: number,
 	productSpecificationId: number,
 	key: string,
-	title: string,
 	value: string
 ) {
 	return await submitSpecification(
-		appId,
 		productId,
 		productSpecificationId,
 		key,
-		title,
 		value
 	);
 }
@@ -318,8 +312,8 @@ export async function submitBase64EncodedFile({
 	title,
 }: FileRequest) {
 	return new Promise((resolve, reject) => {
-		let attachmentId;
 		const reader = new FileReader();
+
 		reader.addEventListener(
 			'load',
 			async () => {
@@ -357,8 +351,7 @@ export async function submitBase64EncodedFile({
 						reject(error);
 					});
 
-					attachmentId = response?.id;
-					resolve(attachmentId);
+					resolve(response);
 				}
 			},
 			false

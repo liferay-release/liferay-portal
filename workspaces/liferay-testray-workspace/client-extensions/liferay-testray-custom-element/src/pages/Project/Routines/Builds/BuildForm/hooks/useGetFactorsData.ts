@@ -9,16 +9,17 @@ import {useFetch} from '~/hooks/useFetch';
 import {
 	APIResponse,
 	TestrayFactor,
+	TestrayFactorOption,
 	testrayFactorCategoryRest,
 	testrayFactorRest,
 } from '~/services/rest';
 
-import {Category} from '../Stack/RunsList';
+import {Category} from '../Stack/FactorStackList';
 
 const useGetFactorsData = (
-	setFactorOptionsList: any,
 	update: any,
-	routineId?: string
+	routineId?: string,
+	setFactorOptionsList?: (values: TestrayFactorOption[][]) => void
 ) => {
 	const {data: factorsData, loading} = useFetch<APIResponse<TestrayFactor>>(
 		testrayFactorRest.resource,
@@ -43,7 +44,7 @@ const useGetFactorsData = (
 				.then(setFactorOptionsList)
 				.catch(console.error);
 
-			const factorItem: Category = {};
+			const factorItem: Category = [];
 
 			factorItems.forEach((item, index) => {
 				factorItem[index] = {
