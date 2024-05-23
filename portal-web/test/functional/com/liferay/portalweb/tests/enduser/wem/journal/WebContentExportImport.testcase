@@ -360,6 +360,7 @@ definition {
 	@description = "This is a use case for LPS-162626. Verify order is preserved in repeatable web content fields when staging."
 	@priority = 3
 	test ContentWillDisplayInOrderInRepeatableWCFields {
+		property portal.acceptance = "U121Round1";
 		property osgi.module.configuration.file.names = "configuration.override.com.liferay.journal.configuration.JournalServiceConfiguration_journalArticleExportImportProcessorCacheEnabled=B\"false\"";
 
 		var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
