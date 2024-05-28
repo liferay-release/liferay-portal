@@ -977,7 +977,7 @@ definition {
 	@description = "This is a test for COMMERCE-11386. As admin, I can cancel an order without getting an error in the log."
 	@priority = 5
 	test CanCancelOrder {
-		property portal.acceptance = "true";
+		property portal.acceptance = "U121Rd2";
 
 		task ("Given a Minium Site with an account is created") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");

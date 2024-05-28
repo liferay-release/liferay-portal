@@ -1785,6 +1785,7 @@ definition {
 	@description = "LPS-194126 Confirm that when creating an object field with translation, a new view fields value is not displayed"
 	@priority = 3
 	test NewFieldValueIsNotDisplayed {
+		property portal.acceptance = "U121Rd2";
 		task ("Given an object with name field 'custom Text Entry' and Add a translation to the added field title") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "DataSetObject",

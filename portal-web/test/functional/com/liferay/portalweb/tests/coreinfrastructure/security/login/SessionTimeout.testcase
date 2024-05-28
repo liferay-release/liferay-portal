@@ -26,6 +26,7 @@ definition {
 	@description = "This is a use case for LPS-75977. Redirect on expire."
 	@priority = 5
 	test RedirectOnExpire {
+		property portal.acceptance = "U121Rd2";
 		property custom.properties = "session.timeout=2${line.separator}session.timeout.redirect.on.expire=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";

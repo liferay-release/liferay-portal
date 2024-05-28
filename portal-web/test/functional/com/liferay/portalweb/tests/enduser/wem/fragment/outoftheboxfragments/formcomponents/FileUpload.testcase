@@ -551,6 +551,7 @@ definition {
 	@description = "This is a test for LPS-194129. Filtering the Documents that are in Libraries."
 	@priority = 4
 	test FilterAttachmentFromDocumentsAndMediaByFileType {
+		property portal.acceptance = "U121Rd2";
 		task ("Given a user has a File Upload fragment mapped to an attachment from documents and media only accept pdf file extension") {
 			var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
 

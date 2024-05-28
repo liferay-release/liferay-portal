@@ -488,7 +488,7 @@ definition {
 
 	@priority = 4
 	test CanImportObjectDefinitionWithDraftStatus {
-		property portal.acceptance = "true";
+		property portal.acceptance = "U121Rd2";
 
 		task ("Given in import and export center I create an import file task") {
 			ImportExport.openImportExportAdmin();

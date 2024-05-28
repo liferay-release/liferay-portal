@@ -507,7 +507,7 @@ local.bundles.backup.file=${liferay.home.parent.dir}/bundles-master-${git.commit
 				</if>
 			</sequential>
 		</for>
-
+<!-- 
 		<replaceregexp
 			file="${project.dir}/test.properties"
 			flags="g"
@@ -520,7 +520,7 @@ local.bundles.backup.file=${liferay.home.parent.dir}/bundles-master-${git.commit
 			flags="g"
 			match="(test\.batch\.class\.names\.includes\[modules-integration-\*-jdk8\]=\\\n.*?)((\n.*?)*)(,\\)(\n\n)"
 			replace="\1\2\5${line.separator}"
-		/>
+		/> -->
 	</target>
 
 	<target name="setup-portal-cluster">
