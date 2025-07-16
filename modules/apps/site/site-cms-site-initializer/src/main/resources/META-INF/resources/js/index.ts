@@ -31,6 +31,8 @@ export {default as CategoryUsagesFDSPropsTransformer} from './main_view/props_tr
 export {default as ContentsFDSPropsTransformer} from './main_view/props_transformer/ContentsFDSPropsTransformer';
 export {default as FilesFDSPropsTransformer} from './main_view/props_transformer/FilesFDSPropsTransformer';
 export {default as FolderFDSPropsTransformer} from './main_view/props_transformer/FolderFDSPropsTransformer';
+export {default as MembersFDSPropsTransformer} from './main_view/props_transformer/MembersFDSPropsTransformer';
+export {default as SitesFDSPropsTransformer} from './main_view/props_transformer/SitesFDSPropsTransformer';
 export {default as StructureUsagesFDSPropsTransformer} from './main_view/props_transformer/StructureUsagesFDSPropsTransformer';
 export {default as StructuresFDSPropsTransformer} from './main_view/props_transformer/StructuresFDSPropsTransformer';
 export {default as TagUsagesFDSPropsTransformer} from './main_view/props_transformer/TagUsagesFDSPropsTransformer';
@@ -38,8 +40,8 @@ export {default as ViewVersionHistoryFDSPropsTransformer} from './main_view/prop
 export {default as VocabularyFDSPropsTransformer} from './main_view/props_transformer/VocabularyFDSPropsTransformer';
 export {default as AddSpaceMembers} from './main_view/spaces/AddSpaceMembers';
 export {default as NewSpace} from './main_view/spaces/NewSpace';
-export {default as SpaceAbstractHeader} from './main_view/spaces/SpaceAbstractHeader';
 export {default as SpaceSettings} from './main_view/spaces/SpaceSettings';
+export {default as SpaceSummaryHeader} from './main_view/spaces/SpaceSummaryHeader';
 export {default as SpacesNavigation} from './main_view/spaces_navigation/SpacesNavigation';
 
 // Structure Builder
