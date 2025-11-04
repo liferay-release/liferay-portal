@@ -557,7 +557,8 @@ public class PortalImplUnitTest {
 
 			_portalImpl.getUserId(mockHttpServletRequest);
 
-			Assert.assertTrue(calledAlwaysAllowDoAsUser[0]);
+			Assert.assertTrue(
+				"AlwaysAllowDoAsUser not called", calledAlwaysAllowDoAsUser[0]);
 
 			calledAlwaysAllowDoAsUser[0] = false;
 
@@ -565,13 +566,17 @@ public class PortalImplUnitTest {
 
 			_portalImpl.getUserId(mockHttpServletRequest);
 
-			Assert.assertFalse(calledAlwaysAllowDoAsUser[0]);
+			Assert.assertFalse(
+				"AlwaysAllowDoAsUser should not be called",
+				calledAlwaysAllowDoAsUser[0]);
 
 			mockHttpServletRequest.setParameter("doAsUserId", "1");
 
 			_portalImpl.getUserId(mockHttpServletRequest);
 
-			Assert.assertFalse(calledAlwaysAllowDoAsUser[0]);
+			Assert.assertFalse(
+				"AlwaysAllowDoAsUser should not be called",
+				calledAlwaysAllowDoAsUser[0]);
 		}
 		finally {
 			serviceRegistration.unregister();

@@ -55,18 +55,9 @@ public class PortletURLImplTest {
 
 	@Test
 	public void testDoAsUserId() throws Exception {
-		MockHttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
+		_group = GroupTestUtil.addGroup();
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
-
-		Company company = CompanyLocalServiceUtil.getCompany(
-			TestPropsValues.getCompanyId());
-
-		mockHttpServletRequest.setAttribute(
-			WebKeys.COMPANY_ID, company.getCompanyId());
-
-		_group = GroupTestUtil.addGroup();
 
 		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
 
@@ -77,8 +68,17 @@ public class PortletURLImplTest {
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
+
+		Company company = CompanyLocalServiceUtil.getCompany(
+			TestPropsValues.getCompanyId());
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, company.getCompanyId());
 
 		byte[] doAsUserIdBytes = new byte[Long.BYTES];
 
