@@ -43,7 +43,6 @@ import com.liferay.portal.kernel.exception.RSSFeedException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
-import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.log.Log;
@@ -6893,23 +6892,13 @@ public class PortalImpl implements Portal {
 
 		long doAsUserId = GetterUtil.getLong(doAsUserIdString);
 
-		if (Validator.isHex(doAsUserIdString)) {
+		if (doAsUserId == 0) {
 			try {
-				byte[] doAsUserIdBytes = StringUtil.hexStringToBytes(
-					doAsUserIdString);
-
-				if (!ChecksumUtil.isValid(doAsUserIdBytes)) {
-					return 0;
-				}
-
-				doAsUserIdBytes = ChecksumUtil.removeChecksum(doAsUserIdBytes);
-
 				Company company = getCompany(httpServletRequest);
 
-				doAsUserId = BigEndianCodec.getLong(
-					EncryptorUtil.decryptUnencodedAsBytes(
-						company.getKeyObj(), doAsUserIdBytes),
-					0);
+				doAsUserId = GetterUtil.getLong(
+					EncryptorUtil.decrypt(
+						company.getKeyObj(), doAsUserIdString));
 			}
 			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
@@ -7181,22 +7170,12 @@ public class PortalImpl implements Portal {
 			String doAsUserIdString = ParamUtil.getString(
 				httpServletRequest, "doAsUserId");
 
-			if (Validator.isHex(doAsUserIdString)) {
-				byte[] doAsUserIdBytes = StringUtil.hexStringToBytes(
-					doAsUserIdString);
-
-				if (!ChecksumUtil.isValid(doAsUserIdBytes)) {
-					return false;
-				}
-
-				doAsUserIdBytes = ChecksumUtil.removeChecksum(doAsUserIdBytes);
-
+			if (Validator.isNotNull(doAsUserIdString)) {
 				Company company = getCompany(httpServletRequest);
 
-				doAsUserId = BigEndianCodec.getLong(
-					EncryptorUtil.decryptUnencodedAsBytes(
-						company.getKeyObj(), doAsUserIdBytes),
-					0);
+				doAsUserId = GetterUtil.getLong(
+					EncryptorUtil.decrypt(
+						company.getKeyObj(), doAsUserIdString));
 			}
 		}
 		catch (Exception exception) {

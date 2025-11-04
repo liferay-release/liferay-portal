@@ -7,7 +7,6 @@ package com.liferay.portal.util;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -15,7 +14,6 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.InvokerPortlet;
-import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.security.auth.AlwaysAllowDoAsUser;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
@@ -32,7 +30,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.LayoutImpl;
@@ -546,14 +543,7 @@ public class PortalImplUnitTest {
 			MockHttpServletRequest mockHttpServletRequest =
 				new MockHttpServletRequest();
 
-			byte[] doAsUserIdBytes = new byte[Long.BYTES];
-
-			BigEndianCodec.putLong(doAsUserIdBytes, 0, 1L);
-
-			mockHttpServletRequest.setParameter(
-				"doAsUserId",
-				StringUtil.bytesToHexString(
-					ChecksumUtil.appendChecksum(doAsUserIdBytes)));
+			mockHttpServletRequest.setParameter("doAsUserId", "1");
 
 			_portalImpl.getUserId(mockHttpServletRequest);
 
@@ -562,17 +552,7 @@ public class PortalImplUnitTest {
 
 			calledAlwaysAllowDoAsUser[0] = false;
 
-			mockHttpServletRequest = new MockHttpServletRequest();
-
-			_portalImpl.getUserId(mockHttpServletRequest);
-
-			Assert.assertFalse(
-				"AlwaysAllowDoAsUser should not be called",
-				calledAlwaysAllowDoAsUser[0]);
-
-			mockHttpServletRequest.setParameter("doAsUserId", "1");
-
-			_portalImpl.getUserId(mockHttpServletRequest);
+			_portalImpl.getUserId(new MockHttpServletRequest());
 
 			Assert.assertFalse(
 				"AlwaysAllowDoAsUser should not be called",
