@@ -15,7 +15,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.encryptor.Encryptor;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
-import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -30,7 +29,6 @@ import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -458,14 +456,8 @@ public class FriendlyURLServletTest {
 		Company company = _companyLocalService.getCompany(
 			_doAsUser.getCompanyId());
 
-		byte[] doAsUserIdBytes = new byte[Long.BYTES];
-
-		BigEndianCodec.putLong(doAsUserIdBytes, 0, _doAsUser.getUserId());
-
-		String encryptedDoAsUserId = StringUtil.bytesToHexString(
-			ChecksumUtil.appendChecksum(
-				_encryptor.encryptUnencoded(
-					company.getKeyObj(), doAsUserIdBytes)));
+		String encryptedDoAsUserId = _encryptor.encrypt(
+			company.getKeyObj(), String.valueOf(_doAsUser.getUserId()));
 
 		Object expectedRedirect = _redirectConstructor1.newInstance(
 			HttpComponentsUtil.setParameter(

@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -39,7 +38,6 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LayoutFriendlyURLSeparatorComposite;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -476,39 +474,26 @@ public class FriendlyURLServlet extends HttpServlet {
 		boolean impersonated = _isImpersonated(httpServletRequest, userId);
 
 		if ((userId > 0) && impersonated) {
-			String doAsUserId = ParamUtil.getString(
-				httpServletRequest, "doAsUserId");
-
-			if (!Validator.isHex(doAsUserId) || !ChecksumUtil.isValid(
-				StringUtil.hexStringToBytes(doAsUserId))) {
-
+			try {
 				Company company = portal.getCompany(httpServletRequest);
 
-				try {
-					byte[] doAsUserIdBytes = new byte[Long.BYTES];
+				String encDoAsUserId = encryptor.encrypt(
+					company.getKeyObj(), String.valueOf(userId));
 
-					BigEndianCodec.putLong(doAsUserIdBytes, 0, userId);
+				actualURL = HttpComponentsUtil.setParameter(
+					actualURL, "doAsUserId", encDoAsUserId);
 
-					doAsUserId = StringUtil.bytesToHexString(
-						ChecksumUtil.appendChecksum(
-							encryptor.encryptUnencoded(
-								company.getKeyObj(), doAsUserIdBytes)));
-				}
-				catch (EncryptorException encryptorException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(encryptorException);
-					}
+				params = new HashMap<>(params);
 
-					return new Redirect(actualURL, false, false);
-				}
+				params.remove("doAsUserId");
 			}
+			catch (EncryptorException encryptorException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(encryptorException);
+				}
 
-			actualURL = HttpComponentsUtil.setParameter(
-				actualURL, "doAsUserId", doAsUserId);
-
-			params = new HashMap<>(params);
-
-			params.remove("doAsUserId");
+				return new Redirect(actualURL, false, false);
+			}
 		}
 
 		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
