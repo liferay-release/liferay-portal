@@ -6891,7 +6891,7 @@ public class PortalImpl implements Portal {
 			return 0;
 		}
 
-		long doAsUserId = 0;
+		long doAsUserId = GetterUtil.getLong(doAsUserIdString);
 
 		if (Validator.isHex(doAsUserIdString)) {
 			try {
