@@ -594,37 +594,17 @@ public class Validator {
 	}
 
 	/**
-	 * Returns <code>true</code> if the string is a hexadecimal number.
+	 * Returns <code>true</code> if the string is a hexidecimal number. At
+	 * present the only requirement is that the string is not <code>null</code>;
+	 * it does not actually check the format of the string.
 	 *
-	 * @param  hexString the string to check
+	 * @param  s the string to check
 	 * @return <code>true</code> if the string is a hexidecimal number;
 	 *         <code>false</code> otherwise
 	 * @see    #isNull(String)
 	 */
-	public static boolean isHex(String hexString) {
-		if (isBlank(hexString) || ((hexString.length() % 2) != 0)) {
-			return false;
-		}
-
-		for (int i = 0; i < hexString.length(); i++) {
-			char c = hexString.charAt(i);
-
-			if ((c >= CharPool.NUMBER_0) && (c <= CharPool.NUMBER_9)) {
-				continue;
-			}
-
-			if ((c >= CharPool.UPPER_CASE_A) && (c <= CharPool.UPPER_CASE_F)) {
-				continue;
-			}
-
-			if ((c >= CharPool.LOWER_CASE_A) && (c <= CharPool.LOWER_CASE_F)) {
-				continue;
-			}
-
-			return false;
-		}
-
-		return true;
+	public static boolean isHex(String s) {
+		return !isNull(s);
 	}
 
 	/**
