@@ -1,0 +1,3 @@
+Baseline test for ci:test:stable to compare against https://github.com/liferay-release/liferay-portal/pull/781
+
+Reference Slack thread: https://liferay.slack.com/archives/C01FP01V5L0/p1762196095211159
