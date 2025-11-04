@@ -32,11 +32,11 @@ public class ChecksumUtilTest {
 			Arrays.equals(
 				new byte[0], ChecksumUtil.appendChecksum(new byte[0])));
 
-		for (byte[] bytes1 : _VALID_BYTES_WITH_CHECKSUM) {
-			byte[] bytes2 = ChecksumUtil.appendChecksum(
-				Arrays.copyOf(bytes1, bytes1.length - 1));
+		for (byte[] valid : _VALID_BYTES_WITH_CHECKSUM) {
+			byte[] result = ChecksumUtil.appendChecksum(
+				Arrays.copyOf(valid, valid.length - 1));
 
-			Assert.assertTrue(Arrays.equals(bytes1, bytes2));
+			Assert.assertTrue(Arrays.equals(valid, result));
 		}
 	}
 
@@ -45,23 +45,23 @@ public class ChecksumUtilTest {
 		Assert.assertFalse(ChecksumUtil.isValid(null));
 		Assert.assertFalse(ChecksumUtil.isValid(new byte[0]));
 
-		for (byte[] bytes : _VALID_BYTES_WITH_CHECKSUM) {
-			Assert.assertTrue(ChecksumUtil.isValid(bytes));
+		for (byte[] valid : _VALID_BYTES_WITH_CHECKSUM) {
+			Assert.assertTrue(ChecksumUtil.isValid(valid));
 		}
 
-		for (byte[] bytes1 : _VALID_BYTES_WITH_CHECKSUM) {
-			byte[] bytes2 = ChecksumUtil.appendChecksum(bytes1);
+		for (byte[] valid : _VALID_BYTES_WITH_CHECKSUM) {
+			byte[] bytes = ChecksumUtil.appendChecksum(valid);
 
-			byte bytes1Checksum = bytes2[bytes2.length - 1];
+			byte validChecksum = bytes[bytes.length - 1];
 
 			for (byte b = Byte.MIN_VALUE; b < Byte.MAX_VALUE; b++) {
-				bytes2[bytes2.length - 1] = b;
+				bytes[bytes.length - 1] = b;
 
-				if (b == bytes1Checksum) {
-					Assert.assertTrue(ChecksumUtil.isValid(bytes2));
+				if (b == validChecksum) {
+					Assert.assertTrue(ChecksumUtil.isValid(bytes));
 				}
 				else {
-					Assert.assertFalse(ChecksumUtil.isValid(bytes2));
+					Assert.assertFalse(ChecksumUtil.isValid(bytes));
 				}
 			}
 		}
@@ -72,11 +72,11 @@ public class ChecksumUtilTest {
 		Assert.assertNull(ChecksumUtil.removeChecksum(null));
 		Assert.assertNull(ChecksumUtil.removeChecksum(new byte[0]));
 
-		for (byte[] bytes1 : _VALID_BYTES_WITH_CHECKSUM) {
-			byte[] result = ChecksumUtil.removeChecksum(bytes1);
+		for (byte[] valid : _VALID_BYTES_WITH_CHECKSUM) {
+			byte[] result = ChecksumUtil.removeChecksum(valid);
 
 			Assert.assertNotNull(result);
-			Assert.assertTrue(result.length == (bytes1.length - 1));
+			Assert.assertTrue(result.length == (valid.length - 1));
 		}
 	}
 
