@@ -15,8 +15,12 @@ import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParserU
 import com.liferay.headless.admin.site.dto.v1_0.CategoryFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.CheckboxFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.CollectionFragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.ColorPaletteFragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.ColorPaletteValue;
+import com.liferay.headless.admin.site.dto.v1_0.ColorPickerFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.ContextualMenuNavigationMenuValue;
 import com.liferay.headless.admin.site.dto.v1_0.FragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.HrefURLValue;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.ItemFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.ItemValue;
@@ -25,9 +29,14 @@ import com.liferay.headless.admin.site.dto.v1_0.NavigationMenuFragmentConfigurat
 import com.liferay.headless.admin.site.dto.v1_0.NavigationMenuValue;
 import com.liferay.headless.admin.site.dto.v1_0.SelectFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.SiteMenuNavigationMenuValue;
+import com.liferay.headless.admin.site.dto.v1_0.SitePageURLValue;
 import com.liferay.headless.admin.site.dto.v1_0.SitePagesNavigationMenuValue;
 import com.liferay.headless.admin.site.dto.v1_0.TemplateReference;
 import com.liferay.headless.admin.site.dto.v1_0.TextFragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.URLFragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.URLValue;
+import com.liferay.headless.admin.site.dto.v1_0.VideoFragmentConfigurationFieldValue;
+import com.liferay.headless.admin.site.dto.v1_0.VideoValue;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.CollectionUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ContextualMenuTypeUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FragmentConfigurationFieldValueTypeUtil;
@@ -37,6 +46,7 @@ import com.liferay.headless.admin.site.internal.dto.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.LocalizedValueUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.util.LogUtil;
+import com.liferay.item.selector.criteria.VideoEmbeddableHTMLItemSelectorReturnType;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -189,6 +199,38 @@ public class FragmentConfigurationFieldValuesUtil {
 
 		if (Objects.equals(
 				fragmentConfigurationFieldValue.getType(),
+				FragmentConfigurationFieldValue.Type.COLOR_PALETTE)) {
+
+			ColorPaletteFragmentConfigurationFieldValue
+				colorPaletteFragmentConfigurationFieldValue =
+					(ColorPaletteFragmentConfigurationFieldValue)
+						fragmentConfigurationFieldValue;
+
+			return _getConfigurationJSONObject(
+				fragmentConfigurationField.isLocalizable(),
+				colorPaletteValue -> _getColorPaletteJSONObject(
+					colorPaletteValue),
+				colorPaletteFragmentConfigurationFieldValue.getValue(),
+				colorPaletteFragmentConfigurationFieldValue.getValue_i18n());
+		}
+
+		if (Objects.equals(
+				fragmentConfigurationFieldValue.getType(),
+				FragmentConfigurationFieldValue.Type.COLOR_PICKER)) {
+
+			ColorPickerFragmentConfigurationFieldValue
+				colorPickerFragmentConfigurationFieldValue =
+					(ColorPickerFragmentConfigurationFieldValue)
+						fragmentConfigurationFieldValue;
+
+			return _getConfigurationObject(
+				fragmentConfigurationField.isLocalizable(),
+				colorPickerFragmentConfigurationFieldValue.getValue(),
+				colorPickerFragmentConfigurationFieldValue.getValue_i18n());
+		}
+
+		if (Objects.equals(
+				fragmentConfigurationFieldValue.getType(),
 				FragmentConfigurationFieldValue.Type.ITEM)) {
 
 			ItemFragmentConfigurationFieldValue
@@ -277,6 +319,39 @@ public class FragmentConfigurationFieldValuesUtil {
 				fragmentConfigurationField.isLocalizable(),
 				textFragmentConfigurationFieldValue.getValue(),
 				textFragmentConfigurationFieldValue.getValue_i18n());
+		}
+
+		if (Objects.equals(
+				fragmentConfigurationFieldValue.getType(),
+				FragmentConfigurationFieldValue.Type.URL)) {
+
+			URLFragmentConfigurationFieldValue
+				urlFragmentConfigurationFieldValue =
+					(URLFragmentConfigurationFieldValue)
+						fragmentConfigurationFieldValue;
+
+			return _getConfigurationJSONObject(
+				fragmentConfigurationField.isLocalizable(),
+				urlValue -> _getURLJSONObject(
+					layoutStructureItemImporterContext, urlValue),
+				urlFragmentConfigurationFieldValue.getValue(),
+				urlFragmentConfigurationFieldValue.getValue_i18n());
+		}
+
+		if (Objects.equals(
+				fragmentConfigurationFieldValue.getType(),
+				FragmentConfigurationFieldValue.Type.VIDEO)) {
+
+			VideoFragmentConfigurationFieldValue
+				videoFragmentConfigurationFieldValue =
+					(VideoFragmentConfigurationFieldValue)
+						fragmentConfigurationFieldValue;
+
+			return _getConfigurationJSONObject(
+				fragmentConfigurationField.isLocalizable(),
+				videoValue -> _getVideoJSONObject(videoValue),
+				videoFragmentConfigurationFieldValue.getValue(),
+				videoFragmentConfigurationFieldValue.getValue_i18n());
 		}
 
 		return null;
@@ -387,6 +462,22 @@ public class FragmentConfigurationFieldValuesUtil {
 			"scopeExternalReferenceCode",
 			ItemScopeUtil.getItemScopeExternalReferenceCode(
 				itemExternalReference.getScope(), groupId)
+		);
+	}
+
+	private static JSONObject _getColorPaletteJSONObject(
+		ColorPaletteValue colorPaletteValue) {
+
+		if (colorPaletteValue == null) {
+			return null;
+		}
+
+		return JSONUtil.put(
+			"color", colorPaletteValue.getColor()
+		).put(
+			"cssClass", colorPaletteValue.getCssClass()
+		).put(
+			"rgbValue", colorPaletteValue.getRgbValue()
 		);
 	}
 
@@ -692,6 +783,54 @@ public class FragmentConfigurationFieldValuesUtil {
 
 		return LanguageUtil.get(
 			LocaleUtil.getMostRelevantLocale(), "pages-hierarchy");
+	}
+
+	private static JSONObject _getURLJSONObject(
+			LayoutStructureItemImporterContext
+				layoutStructureItemImporterContext,
+			URLValue urlValue)
+		throws Exception {
+
+		if (urlValue == null) {
+			return null;
+		}
+
+		if (Objects.equals(urlValue.getUrlType(), URLValue.UrlType.HREF)) {
+			HrefURLValue hrefURLValue = (HrefURLValue)urlValue;
+
+			return JSONUtil.put("href", hrefURLValue.getHref());
+		}
+
+		SitePageURLValue sitePageURLValue = (SitePageURLValue)urlValue;
+
+		ItemExternalReference itemExternalReference =
+			sitePageURLValue.getSitePage();
+
+		if (itemExternalReference == null) {
+			return null;
+		}
+
+		return JSONUtil.put(
+			"layout",
+			LayoutUtil.getMappedLayoutJSONObject(
+				layoutStructureItemImporterContext.getCompanyId(),
+				itemExternalReference.getExternalReferenceCode(),
+				itemExternalReference.getScope(),
+				layoutStructureItemImporterContext.getGroupId()));
+	}
+
+	private static JSONObject _getVideoJSONObject(VideoValue videoValue) {
+		if ((videoValue == null) || Validator.isNull(videoValue.getHtml())) {
+			return null;
+		}
+
+		return JSONUtil.put(
+			"html", videoValue.getHtml()
+		).put(
+			"title", videoValue.getTitle()
+		).put(
+			"type", VideoEmbeddableHTMLItemSelectorReturnType.class.getName()
+		);
 	}
 
 	private static boolean _isValidValue(

@@ -47,6 +47,7 @@ import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerContextRefer
 import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerPageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerReference;
 import com.liferay.headless.admin.site.client.dto.v1_0.FragmentEditableElement;
+import com.liferay.headless.admin.site.client.dto.v1_0.FragmentEditableElementValueFragmentLink;
 import com.liferay.headless.admin.site.client.dto.v1_0.FragmentInlineValue;
 import com.liferay.headless.admin.site.client.dto.v1_0.FragmentInstancePageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.FragmentLink;
@@ -2397,6 +2398,8 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 		String categoryFieldName = RandomTestUtil.randomString();
 		String checkboxFieldName = RandomTestUtil.randomString();
 		String collectionFieldName = RandomTestUtil.randomString();
+		String colorPaletteFieldName = RandomTestUtil.randomString();
+		String colorPickerFieldName = RandomTestUtil.randomString();
 		String itemFieldName = RandomTestUtil.randomString();
 		String lengthFieldName = RandomTestUtil.randomString();
 		String navigationMenuFieldName = RandomTestUtil.randomString();
@@ -2426,6 +2429,8 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				)));
 
 		String textFieldName = RandomTestUtil.randomString();
+		String urlFieldName = RandomTestUtil.randomString();
+		String videoFieldName = RandomTestUtil.randomString();
 
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithConfiguration(
 			FragmentConfigurationTestUtil.getConfiguration(
@@ -2445,6 +2450,16 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 					collectionFieldName,
 					HashMapBuilder.<String, Object>put(
 						"type", "collectionSelector"
+					).build()
+				).put(
+					colorPaletteFieldName,
+					HashMapBuilder.<String, Object>put(
+						"type", "colorPalette"
+					).build()
+				).put(
+					colorPickerFieldName,
+					HashMapBuilder.<String, Object>put(
+						"type", "colorPicker"
 					).build()
 				).put(
 					itemFieldName,
@@ -2479,6 +2494,16 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 					).put(
 						"type", "text"
 					).build()
+				).put(
+					urlFieldName,
+					HashMapBuilder.<String, Object>put(
+						"type", "url"
+					).build()
+				).put(
+					videoFieldName,
+					HashMapBuilder.<String, Object>put(
+						"type", "videoSelector"
+					).build()
 				).build()),
 			HashMapBuilder.<String, Object>put(
 				categoryFieldName, _getAssetCategory(testGroup.getGroupId())
@@ -2486,6 +2511,17 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				checkboxFieldName, RandomTestUtil.randomBoolean()
 			).put(
 				collectionFieldName, _getAssetListEntry(testGroup.getGroupId())
+			).put(
+				colorPaletteFieldName,
+				HashMapBuilder.put(
+					"color", RandomTestUtil.randomString()
+				).put(
+					"cssClass", RandomTestUtil.randomString()
+				).put(
+					"rgbValue", RandomTestUtil.randomString()
+				).build()
+			).put(
+				colorPickerFieldName, RandomTestUtil.randomString()
 			).put(
 				itemFieldName,
 				HashMapBuilder.put(
@@ -2513,6 +2549,18 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				selectFieldName, selectValue1
 			).put(
 				textFieldName, RandomTestUtil.randomString()
+			).put(
+				urlFieldName,
+				HashMapBuilder.put(
+					"href", RandomTestUtil.randomString()
+				).build()
+			).put(
+				videoFieldName,
+				HashMapBuilder.put(
+					"html", RandomTestUtil.randomString()
+				).put(
+					"title", RandomTestUtil.randomString()
+				).build()
 			).build(),
 			HashMapBuilder.<String, Object>put(
 				categoryFieldName,
@@ -2523,6 +2571,17 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				collectionFieldName,
 				"com.liferay.asset.internal.info.collection.provider." +
 					"HighestRatedAssetsInfoCollectionProvider"
+			).put(
+				colorPaletteFieldName,
+				HashMapBuilder.put(
+					"color", RandomTestUtil.randomString()
+				).put(
+					"cssClass", RandomTestUtil.randomString()
+				).put(
+					"rgbValue", RandomTestUtil.randomString()
+				).build()
+			).put(
+				colorPickerFieldName, RandomTestUtil.randomString()
 			).put(
 				itemFieldName,
 				HashMapBuilder.put(
@@ -2540,11 +2599,23 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				selectFieldName, selectValue2
 			).put(
 				textFieldName, RandomTestUtil.randomString()
+			).put(
+				urlFieldName,
+				HashMapBuilder.put(
+					"layout", _layout
+				).build()
+			).put(
+				videoFieldName,
+				HashMapBuilder.put(
+					"html", RandomTestUtil.randomString()
+				).put(
+					"title", RandomTestUtil.randomString()
+				).build()
 			).build(),
 			Collections.emptyMap());
 
 		_testMissingOptionalReference(
-			4,
+			5,
 			() ->
 				_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithConfiguration(
 					FragmentConfigurationTestUtil.getConfiguration(
@@ -2568,6 +2639,20 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 							collectionFieldName,
 							HashMapBuilder.<String, Object>put(
 								"type", "collectionSelector"
+							).build()
+						).put(
+							colorPaletteFieldName,
+							HashMapBuilder.<String, Object>put(
+								"localized", true
+							).put(
+								"type", "colorPalette"
+							).build()
+						).put(
+							colorPickerFieldName,
+							HashMapBuilder.<String, Object>put(
+								"localized", true
+							).put(
+								"type", "colorPicker"
 							).build()
 						).put(
 							itemFieldName,
@@ -2615,6 +2700,20 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 							).put(
 								"type", "text"
 							).build()
+						).put(
+							urlFieldName,
+							HashMapBuilder.<String, Object>put(
+								"localized", true
+							).put(
+								"type", "url"
+							).build()
+						).put(
+							videoFieldName,
+							HashMapBuilder.<String, Object>put(
+								"localized", true
+							).put(
+								"type", "videoSelector"
+							).build()
 						).build()),
 					HashMapBuilder.<String, Object>put(
 						categoryFieldName,
@@ -2624,6 +2723,17 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 					).put(
 						collectionFieldName,
 						_getAssetListEntry(irrelevantGroup.getGroupId())
+					).put(
+						colorPaletteFieldName,
+						HashMapBuilder.put(
+							"color", RandomTestUtil.randomString()
+						).put(
+							"cssClass", RandomTestUtil.randomString()
+						).put(
+							"rgbValue", RandomTestUtil.randomString()
+						).build()
+					).put(
+						colorPickerFieldName, RandomTestUtil.randomString()
 					).put(
 						itemFieldName,
 						HashMapBuilder.<String, Object>put(
@@ -2653,6 +2763,19 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 						selectFieldName, selectValue1
 					).put(
 						textFieldName, RandomTestUtil.randomString()
+					).put(
+						urlFieldName,
+						HashMapBuilder.put(
+							"layout",
+							LayoutTestUtil.addTypeContentLayout(irrelevantGroup)
+						).build()
+					).put(
+						videoFieldName,
+						HashMapBuilder.put(
+							"html", RandomTestUtil.randomString()
+						).put(
+							"title", RandomTestUtil.randomString()
+						).build()
 					).build(),
 					HashMapBuilder.<String, Object>put(
 						categoryFieldName,
@@ -2676,6 +2799,17 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 							"scopeExternalReferenceCode",
 							RandomTestUtil.randomString()
 						).build()
+					).put(
+						colorPaletteFieldName,
+						HashMapBuilder.put(
+							"color", RandomTestUtil.randomString()
+						).put(
+							"cssClass", RandomTestUtil.randomString()
+						).put(
+							"rgbValue", RandomTestUtil.randomString()
+						).build()
+					).put(
+						colorPickerFieldName, RandomTestUtil.randomString()
 					).put(
 						itemFieldName,
 						HashMapBuilder.put(
@@ -2715,6 +2849,27 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 						selectFieldName, selectValue2
 					).put(
 						textFieldName, RandomTestUtil.randomString()
+					).put(
+						urlFieldName,
+						HashMapBuilder.put(
+							"layout",
+							HashMapBuilder.<String, Object>put(
+								"className", Layout.class.getName()
+							).put(
+								"externalReferenceCode",
+								RandomTestUtil.randomString()
+							).put(
+								"scopeExternalReferenceCode",
+								RandomTestUtil.randomString()
+							).build()
+						).build()
+					).put(
+						videoFieldName,
+						HashMapBuilder.put(
+							"html", RandomTestUtil.randomString()
+						).put(
+							"title", RandomTestUtil.randomString()
+						).build()
 					).build(),
 					Collections.emptyMap()));
 
@@ -2767,29 +2922,56 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 	private void _testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements()
 		throws Exception {
 
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			testGroup.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements(
 			FragmentEditableElementTestUtil.getFragmentEditableElements(
+				FragmentEditableElementValueFragmentLink.Prefix.EMAIL,
+				_getFragmentLink(
+					JournalArticle.class.getName(),
+					journalArticle.getExternalReferenceCode(),
+					"JournalArticle_title", null),
 				null, null, TextFragmentValue.Type.INLINE));
+
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements(
 			FragmentEditableElementTestUtil.getFragmentEditableElements(
+				null, null,
 				FragmentMappedValueItemContextReference.ContextSource.
 					COLLECTION_ITEM,
 				FragmentMappedValueItemReference.Type.CONTEXT_REFERENCE,
 				TextFragmentValue.Type.MAPPED));
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements(
 			FragmentEditableElementTestUtil.getFragmentEditableElements(
+				FragmentEditableElementValueFragmentLink.Prefix.PHONE,
+				_getFragmentLink(
+					Layout.class.getName(), layout.getExternalReferenceCode(),
+					null, null),
 				FragmentMappedValueItemContextReference.ContextSource.
 					DISPLAY_PAGE_ITEM,
 				FragmentMappedValueItemReference.Type.CONTEXT_REFERENCE,
 				TextFragmentValue.Type.MAPPED));
+
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements(
 			FragmentEditableElementTestUtil.getFragmentEditableElements(
+				null,
+				_getFragmentLink(
+					null, null, null,
+					HashMapBuilder.put(
+						LocaleUtil.SPAIN.toString(), "https://www.liferay.es"
+					).put(
+						LocaleUtil.US.toString(), "https://www.liferay.com"
+					).build()),
 				null,
 				FragmentMappedValueItemReference.Type.ITEM_EXTERNAL_REFERENCE,
 				TextFragmentValue.Type.MAPPED));
 		_testPutSitePageSpecificationPageExperiencePageElementWithFragmentPageElementWithFragmentEditableElements(
 			FragmentEditableElementTestUtil.getFragmentEditableElements(
-				null, null, null));
+				null, null, null, null, null));
 	}
 
 	private void
