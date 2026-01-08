@@ -234,7 +234,11 @@ public class IndividualSegmentController extends BaseFaroController {
 	public FaroResultsDisplay getRealTimeMemberships(
 			@PathParam("groupId") long groupId, @PathParam("id") String id,
 			@QueryParam("day") String day,
-			@QueryParam("filter") String filterString,
+			@DefaultValue(StringPool.BLANK) @QueryParam("profileTypes")
+				FaroParam<List<String>> profileTypesFaroParam,
+			@QueryParam("query") String query,
+			@DefaultValue(StringPool.BLANK) @QueryParam("types") FaroParam
+				<List<String>> typesFaroParam,
 			@QueryParam("cur") int cur, @QueryParam("delta") int delta,
 			@DefaultValue(StringPool.BLANK) @QueryParam("orderByFields")
 				FaroParam<List<OrderByField>> orderByFieldsFaroParam)
@@ -243,7 +247,8 @@ public class IndividualSegmentController extends BaseFaroController {
 		Results<IndividualSegmentRealTimeMembership> results =
 			contactsEngineClient.getIndividualSegmentRealTimeMemberships(
 				faroProjectLocalService.getFaroProjectByGroupId(groupId), day,
-				filterString, id, cur, delta,
+				id, profileTypesFaroParam.getValue(), query,
+				typesFaroParam.getValue(), cur, delta,
 				orderByFieldsFaroParam.getValue());
 
 		return new FaroResultsDisplay(results);

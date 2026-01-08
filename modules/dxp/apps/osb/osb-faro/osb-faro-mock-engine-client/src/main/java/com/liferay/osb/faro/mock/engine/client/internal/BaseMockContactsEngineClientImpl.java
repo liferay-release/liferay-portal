@@ -858,13 +858,13 @@ public abstract class BaseMockContactsEngineClientImpl
 	@Override
 	public Results<IndividualSegmentRealTimeMembership>
 		getIndividualSegmentRealTimeMemberships(
-			FaroProject faroProject, String day, String filterString,
-			String individualSegmentId, int cur, int delta,
-			List<OrderByField> orderByFields) {
+			FaroProject faroProject, String day, String individualSegmentId,
+			List<String> profileTypes, String query, List<String> types,
+			int cur, int delta, List<OrderByField> orderByFields) {
 
 		return contactsEngineClient.getIndividualSegmentRealTimeMemberships(
-			faroProject, day, filterString, individualSegmentId, cur, delta,
-			orderByFields);
+			faroProject, day, individualSegmentId, profileTypes, query, types,
+			cur, delta, orderByFields);
 	}
 
 	@Override

@@ -2233,9 +2233,9 @@ public class ContactsEngineClientImpl
 	@Override
 	public Results<IndividualSegmentRealTimeMembership>
 		getIndividualSegmentRealTimeMemberships(
-			FaroProject faroProject, String day, String filterString,
-			String individualSegmentId, int cur, int delta,
-			List<OrderByField> orderByFields) {
+			FaroProject faroProject, String day, String individualSegmentId,
+			List<String> profileTypes, String query, List<String> types,
+			int cur, int delta, List<OrderByField> orderByFields) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, orderByFields);
@@ -2244,8 +2244,18 @@ public class ContactsEngineClientImpl
 			uriVariables.put("day", day);
 		}
 
-		uriVariables.put("filter", filterString);
 		uriVariables.put("id", individualSegmentId);
+
+		if (profileTypes != null) {
+			uriVariables.put(
+				"profileTypes", String.join(StringPool.COMMA, profileTypes));
+		}
+
+		uriVariables.put("query", query);
+
+		if (types != null) {
+			uriVariables.put("types", String.join(StringPool.COMMA, types));
+		}
 
 		PagedModel<?, IndividualSegmentRealTimeMembership> pagedModel = get(
 			faroProject, Rels.INDIVIDUAL_SEGMENT_REAL_TIME_MEMBERSHIPS,
