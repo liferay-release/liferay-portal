@@ -22,9 +22,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -51,8 +49,7 @@ public class TestrayFilePrioritizerDispatchTaskExecutor
 		UnicodeProperties unicodeProperties =
 			dispatchTrigger.getDispatchTaskSettingsUnicodeProperties();
 
-		if (Validator.isNull(unicodeProperties.getProperty("s3APIKey")) ||
-			Validator.isNull(unicodeProperties.getProperty("s3BucketName")) ||
+		if (Validator.isNull(unicodeProperties.getProperty("s3BucketName")) ||
 			Validator.isNull(
 				unicodeProperties.getProperty("s3InboxFolderName")) ||
 			Validator.isNull(
@@ -72,14 +69,10 @@ public class TestrayFilePrioritizerDispatchTaskExecutor
 			return;
 		}
 
-		String s3APIKey = unicodeProperties.getProperty("s3APIKey");
-
-		try (InputStream inputStream = new ByteArrayInputStream(
-				s3APIKey.getBytes())) {
-
+		try {
 			Storage storage = StorageOptions.newBuilder(
 			).setCredentials(
-				GoogleCredentials.fromStream(inputStream)
+				GoogleCredentials.getApplicationDefault()
 			).build(
 			).getService();
 

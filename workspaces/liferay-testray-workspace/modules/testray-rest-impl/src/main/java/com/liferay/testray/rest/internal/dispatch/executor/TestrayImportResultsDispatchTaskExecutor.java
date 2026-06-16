@@ -30,9 +30,7 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.testray.rest.manager.TestrayManager;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,8 +58,7 @@ public class TestrayImportResultsDispatchTaskExecutor
 		UnicodeProperties unicodeProperties =
 			dispatchTrigger.getDispatchTaskSettingsUnicodeProperties();
 
-		if (Validator.isNull(unicodeProperties.getProperty("s3APIKey")) ||
-			Validator.isNull(unicodeProperties.getProperty("s3BucketName")) ||
+		if (Validator.isNull(unicodeProperties.getProperty("s3BucketName")) ||
 			Validator.isNull(
 				unicodeProperties.getProperty("s3ErroredFolderName")) ||
 			Validator.isNull(
@@ -121,17 +118,13 @@ public class TestrayImportResultsDispatchTaskExecutor
 			UnicodeProperties unicodeProperties, long userId)
 		throws Exception {
 
-		String s3APIKey = unicodeProperties.getProperty("s3APIKey");
-
-		try (InputStream inputStream = new ByteArrayInputStream(
-				s3APIKey.getBytes())) {
-
+		try {
 			long filesCountThreshold = GetterUtil.getLong(
 				unicodeProperties.getProperty("filesCountThreshold"), -1);
 
 			Storage storage = StorageOptions.newBuilder(
 			).setCredentials(
-				GoogleCredentials.fromStream(inputStream)
+				GoogleCredentials.getApplicationDefault()
 			).build(
 			).getService();
 
