@@ -19,6 +19,7 @@
         ]
     },
     "resolutions": {
-        "d3-color": "3.1.0"
+        "d3-color": "3.1.0",
+		"billboard.js": "3.18.0"
     }
 }
