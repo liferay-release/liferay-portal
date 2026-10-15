@@ -17,5 +17,8 @@
             "client-extensions/liferay-testray-analytics-custom-element",
             "client-extensions/liferay-testray-etc-jira"
         ]
+    },
+    "resolutions": {
+        "d3-color": "3.1.0"
     }
 }
