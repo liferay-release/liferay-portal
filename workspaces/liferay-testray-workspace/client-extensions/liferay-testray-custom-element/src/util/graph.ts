@@ -55,6 +55,6 @@ export function getDonutLegend(graph: any, options: DonutLegendOptions) {
 				value,
 			});
 		})
-		.on('mouseover', (id) => graph.focus(id.toUpperCase()))
+		.on('mouseover', (event, id) => graph.focus(id.toUpperCase()))
 		.on('mouseout', () => graph.revert());
 }
