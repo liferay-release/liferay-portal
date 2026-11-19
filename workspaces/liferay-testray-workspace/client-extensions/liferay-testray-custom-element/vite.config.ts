@@ -23,6 +23,10 @@ export default defineConfig({
 	plugins: [react()],
 	resolve: {
 		alias: {
+			'@clayui/icon': path.resolve(
+				__dirname,
+				'../../node_modules/@clayui/icon/lib/esm/index.js'
+			),
 			'~': path.resolve(__dirname, './src/'),
 		},
 	},
